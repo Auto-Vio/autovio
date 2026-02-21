@@ -1,0 +1,3 @@
+claude --resume 7479a319-862e-4e12-8bbf-6024ee1064d5
+
+Geçişler eklenecek

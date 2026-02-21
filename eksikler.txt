@@ -1,0 +1,6 @@
+
+  Dikkat Edilmesi Gerekenler
+
+  1. Transition efektleri yok — ezffmpeg'de geçiş efekti desteği dökümante edilmemiş. İleride gerekirse raw FFmpeg komutu ile eklenebilir.
+  2. Logo/görsel overlay yok — ezffmpeg sadece text overlay destekliyor. Logo için ek FFmpeg filter gerekir.
+  3. Export async olacak — Backend'de render uzun sürebilir, progress tracking için polling veya WebSocket gerekir.

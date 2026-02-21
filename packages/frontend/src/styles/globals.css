@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Timeline editor dark theme overrides */
+.timeline-dark .timeline-editor {
+  background: #111827 !important;
+  color: #d1d5db;
+}
+
+.timeline-dark .timeline-editor-time-area {
+  background: #1f2937 !important;
+}
+
+.timeline-dark .timeline-editor-edit-row {
+  border-bottom: 1px solid #374151 !important;
+}
+
+.timeline-dark .timeline-editor-cursor {
+  background: #a855f7 !important;
+}
+
+.timeline-dark .timeline-editor-cursor-top {
+  border-color: #a855f7 transparent transparent transparent !important;
+}
+
+.timeline-dark .timeline-editor-action {
+  background: rgba(107, 33, 168, 0.35) !important;
+  border-radius: 4px;
+}
+
+.timeline-dark .timeline-editor-action-left-stretch,
+.timeline-dark .timeline-editor-action-right-stretch {
+  background: rgba(168, 85, 247, 0.6) !important;
+}
+
+.timeline-dark .timeline-editor-drag-line {
+  background: #f59e0b !important;
+}

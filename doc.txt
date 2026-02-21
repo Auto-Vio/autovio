@@ -1,0 +1,153 @@
+ViraGen
+AI-Powered Social Media Video Generation Pipeline
+Teknik Mimari & Geliştirici Dökümanı
+v0.1.0 — Şubat 2026
+1. Proje Genel Bakış
+ViraGen, kullanıcının bir referans sosyal medya videosu yüklemesiyle başlayan ve tamamen AI destekli bir pipeline aracılığıyla benzer yeni bir video üreten, open-source bir local web uygulamasıdır.
+Temel felsefe: Her component model-agnostic olacak. Hangi AI modelinin kullanılacağı kullanıcı tarafından seçilebilir, API key'ler kullanıcıya aittir.
+1.1 Kullanım Senaryoları
+Style Transfer Modu: Referans videonun stilini al, kendi ürünün için yeniden üret
+Content Remix Modu: Referans videonun konusunu al, farklı bir perspektiften yeniden üret
+1.2 Teknoloji Stack
+Katman
+Teknoloji
+Backend
+Python + FastAPI
+Frontend
+React (Vite)
+Video İşleme
+ffmpeg.wasm (tarayıcı)
+Görsel Editör
+Fabric.js
+Config Yönetimi
+providers.config.json
+Paket Yönetimi
+uv (Python) + npm (JS)
+
+2. Uygulama Akışı
+Kullanıcı uygulamayı açtığında aşağıdaki lineer akışı takip eder. Her adım tamamlanmadan sonraki adıma geçilemez. Manuel adımlar için uygulama kullanıcıyı bekler.
+Adım 0 — Init (Kullanıcı Girişi)
+Kullanıcıdan şu bilgiler alınır:
+Referans video dosyası (MP4, MOV, AVI — maks. 100MB)
+Mod seçimi: Style Transfer / Content Remix
+Style Transfer seçilirse: ürün adı, ürün açıklaması, hedef kitle
+(Opsiyonel) Tercih edilen dil ve video süresi
+Adım 1 — Video Analyzer
+Referans video seçilen AI modeline gönderilir. Model videoyu sahne sahne analiz eder ve yapılandırılmış bir JSON döner.
+Output yapısı:
+{
+  "scene_count": 5,
+  "overall_tone": "energetic",
+  "color_palette": ["#FF5733", "#1A1A2E"],
+  "tempo": "fast",
+  "has_text_overlay": true,
+  "scenes": [
+    {
+      "index": 1,
+      "duration_seconds": 3,
+      "description": "Ürün close-up, soft focus arka plan",
+      "transition": "cut",
+      "text_overlay": "Just Do It",
+      "camera_movement": "slow zoom in"
+    }
+  ]
+}
+Adım 2 — Scenario Builder
+Adım 1'den gelen analiz + kullanıcı niyeti (mod + ürün bilgisi) bir Scenario Builder modeline gönderilir. Bu model, her sahne için detaylı, video/görsel üretimine hazır structured bir senaryo üretir.
+Output yapısı (her sahne için):
+{
+  "scene_index": 1,
+  "duration_seconds": 3,
+  "image_prompt": "A sleek running shoe on a minimalist white surface,
+                   soft rim lighting, macro lens, 8K, photorealistic",
+  "negative_prompt": "blurry, text, watermark, cluttered background",
+  "video_prompt": "Camera slowly zooms into the shoe sole, shallow depth
+                   of field, smooth motion, cinematic",
+  "text_overlay": "Feel Every Step",
+  "transition": "cut"
+}
+Adım 3 — Video Generator
+Her sahne için iki alt adım çalışır:
+3a. Image Generation: Senaryo'daki image_prompt kullanılarak sahne görseli üretilir
+3b. Image-to-Video: Üretilen görsel + video_prompt kullanılarak sahne videosu üretilir
+Her sahne sırayla işlenir. Tamamlanan sahneler arayüzde önizlenebilir. Kullanıcı beğenmediği sahneyi yeniden üretebilir.
+Adım 4 — Editor & Export
+Tüm sahne videoları hazır olduğunda kullanıcı dahili editöre yönlendirilir:
+Sahneleri sürükle-bırak ile yeniden sırala
+Logo ve metin overlay ekle (Fabric.js canvas editörü)
+Arka plan müziği ekle
+Geçiş efekti seç
+Tüm sahneleri ffmpeg.wasm ile birleştir ve export et
+3. Component Mimarisi
+Her component bir abstract interface üzerinden çalışır. Alt modeller bu interface'i implement eder. Bu sayede kullanıcı ayarlardan modeli değiştirdiğinde kodun geri kalanı hiçbir şey fark etmez.
+3.1 VideoAnalyzer
+Özellik
+Detay
+Input
+video: File, mode: 'style_transfer' | 'content_remix'
+Output
+AnalysisResult (JSON — yukarıdaki yapı)
+Interface
+analyze(video, mode) → Promise<AnalysisResult>
+Providers
+GeminiVisionProvider, ClaudeVisionProvider, GPT4VProvider
+Fallback
+Video thumbnail alınır, her 5 saniyede bir frame analiz edilir
+
+3.2 ScenarioBuilder
+Özellik
+Detay
+Input
+analysis: AnalysisResult, intent: UserIntent
+Output
+Scene[] (her sahne için detaylı senaryo)
+Interface
+build(analysis, intent) → Promise<Scene[]>
+Providers
+GeminiProvider, ClaudeProvider, OpenAIProvider
+Not
+System prompt + kullanıcı context ile çalışır, prompt şablonları ayrı dosyada
+
+3.3 VideoGenerator
+İki alt component içerir:
+3.3.1 ImageGenerator
+Özellik
+Detay
+Input
+image_prompt: string, negative_prompt: string
+Output
+imageUrl: string
+Interface
+generate(prompt, negativePrompt) → Promise<string>
+Providers
+FluxProvider, DallE3Provider, IdeogramProvider, StableDiffusionProvider
+
+3.3.2 ImageToVideoConverter
+Özellik
+Detay
+Input
+imageUrl: string, video_prompt: string, duration: number
+Output
+videoUrl: string
+Interface
+convert(imageUrl, prompt, duration) → Promise<string>
+Providers
+RunwayProvider, KlingProvider, LumaProvider, VeoProvider (gelecekte)
+
+3.4 Editor
+Özellik
+Detay
+Input
+clips: VideoClip[], assets: Asset[]
+Output
+finalVideo: Blob
+Teknoloji
+ffmpeg.wasm + Fabric.js
+Özellikler
+Sıralama, logo, metin, müzik, geçiş efektleri, export (MP4)
+
+4. Provider Sistemi
+Tüm AI entegrasyonları providers.config.json üzerinden yönetilir. Kullanıcı Settings ekranından provider seçer ve API key girer. Key'ler browser localStorage'da tutulur, backend'e sadece istek anında gönderilir, hiçbir zaman sunucuda saklanmaz.
+Bu döküman ViraGen projesinin ilk sürümüdür. Geliştirme sürecinde güncellenecektir.
+
+
