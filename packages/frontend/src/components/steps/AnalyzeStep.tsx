@@ -1,16 +1,27 @@
 import { useEffect } from "react";
-import { Loader2, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, AlertCircle, Save } from "lucide-react";
 import { useStore } from "../../store/useStore";
 import { analyzeVideo } from "../../api/client";
+import { styleGuideFromAnalysis } from "@viragen/shared";
+import * as projectStorage from "../../storage/projectStorage";
+import { useToastStore } from "../../store/useToastStore";
 
 export default function AnalyzeStep() {
   const {
-    videoFile, mode, analysis,
-    projectAnalyzerPrompt, workAnalyzerPrompt,
-    analysisLoading, analysisError,
-    setAnalysis, setAnalysisLoading, setAnalysisError,
+    videoFile,
+    mode,
+    analysis,
+    currentProjectId,
+    projectAnalyzerPrompt,
+    workAnalyzerPrompt,
+    analysisLoading,
+    analysisError,
+    setAnalysis,
+    setAnalysisLoading,
+    setAnalysisError,
     setStep,
   } = useStore();
+  const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     if (!videoFile || analysis) return;
@@ -133,6 +144,43 @@ export default function AnalyzeStep() {
           </div>
         ))}
       </div>
+
+      {/* Save as Style Guide */}
+      {currentProjectId && (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={async () => {
+              if (!analysis || !currentProjectId) return;
+              try {
+                const project = await projectStorage.getProject(currentProjectId);
+                if (!project) {
+                  addToast("Project not found", "error");
+                  return;
+                }
+                const fromAnalysis = styleGuideFromAnalysis(analysis);
+                const updated = {
+                  ...project,
+                  styleGuide: {
+                    ...project.styleGuide,
+                    ...fromAnalysis,
+                  },
+                  updatedAt: Date.now(),
+                };
+                await projectStorage.saveProject(updated);
+                addToast("Style guide saved to project", "success");
+              } catch (err) {
+                console.error("Failed to save style guide:", err);
+                addToast("Failed to save style guide", "error");
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
+          >
+            <Save size={16} />
+            Save as Project Style Guide
+          </button>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex gap-3">

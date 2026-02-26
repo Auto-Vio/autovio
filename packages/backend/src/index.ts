@@ -16,6 +16,7 @@ import worksRouter from "./routes/works.js";
 import exportRouter from "./routes/export.js";
 import authRouter from "./routes/auth.js";
 import tokensRouter from "./routes/tokens.js";
+import styleGuideRouter from "./routes/style-guide.js";
 import { errorHandler } from "./middleware/error.js";
 import { requestLogger } from "./middleware/logger.js";
 import { connectDB } from "./db/index.js";
@@ -37,6 +38,7 @@ app.use("/api/auth", authRouter);
 
 // Protected routes
 app.use("/api/tokens", tokensRouter);
+app.use("/api/style-guide", styleGuideRouter);
 app.use("/api/analyze", analyzeRouter);
 app.use("/api/scenario", scenarioRouter);
 app.use("/api/generate", generateRouter);

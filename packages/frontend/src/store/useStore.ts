@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AnalysisResult, ScenarioScene, ProviderConfig } from "@viragen/shared";
+import type { AnalysisResult, ScenarioScene, ProviderConfig, StyleGuide } from "@viragen/shared";
 import { getProviderConfig, generateImage as apiGenerateImage, generateVideo as apiGenerateVideo } from "../api/client";
 import type { WorkSnapshot } from "@viragen/shared";
 import * as projectStorage from "../storage/projectStorage";
@@ -22,6 +22,7 @@ interface AppState {
   currentWorkId: string | null;
   currentWorkName: string | null;
   projectKnowledge: string;
+  projectStyleGuide: StyleGuide | undefined;
   workSystemPrompt: string;
   projectAnalyzerPrompt: string;
   projectImageSystemPrompt: string;
@@ -128,6 +129,7 @@ const initialState = {
   currentWorkId: null as string | null,
   currentWorkName: null as string | null,
   projectKnowledge: "",
+  projectStyleGuide: undefined as StyleGuide | undefined,
   workSystemPrompt: "",
   projectAnalyzerPrompt: "",
   projectImageSystemPrompt: "",
@@ -138,7 +140,7 @@ const initialState = {
   loadingProject: false,
   currentStep: 0 as PipelineStep,
   videoFile: null as File | null,
-  hasReferenceVideo: true,
+  hasReferenceVideo: false,
   mode: "style_transfer" as const,
   productName: "",
   productDescription: "",
@@ -269,6 +271,7 @@ export const useStore = create<AppState>((set, get) => ({
       currentWorkId: workId,
       currentWorkName: work.name,
       projectKnowledge: project?.knowledge ?? "",
+      projectStyleGuide: project?.styleGuide,
       workSystemPrompt: work.systemPrompt,
       projectAnalyzerPrompt: project?.analyzerPrompt ?? "",
       projectImageSystemPrompt: project?.imageSystemPrompt ?? "",
@@ -475,7 +478,10 @@ export const useStore = create<AppState>((set, get) => ({
       const remoteImageUrl = await apiGenerateImage(
         scene.image_prompt,
         scene.negative_prompt ?? "",
-        imageInstruction ? { imageInstruction } : undefined,
+        {
+          ...(imageInstruction ? { imageInstruction } : {}),
+          ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+        },
       );
       const imageUrlForUi =
         currentProjectId && currentWorkId
@@ -528,7 +534,10 @@ export const useStore = create<AppState>((set, get) => ({
         imageUrlForVideo,
         scene.video_prompt,
         scene.duration_seconds ?? 5,
-        videoInstruction ? { videoInstruction } : undefined,
+        {
+          ...(videoInstruction ? { videoInstruction } : {}),
+          ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+        },
       );
       let videoUrlForUi = remoteVideoUrl;
       if (currentProjectId && currentWorkId) {
@@ -596,7 +605,10 @@ export const useStore = create<AppState>((set, get) => ({
         imageUrlForVideo,
         videoPrompt,
         duration,
-        videoInstruction ? { videoInstruction } : undefined,
+        {
+          ...(videoInstruction ? { videoInstruction } : {}),
+          ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+        },
       );
       let videoUrlForUi = remoteVideoUrl;
       if (currentProjectId && currentWorkId) {

@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { AnalysisResultSchema, UserIntentSchema } from "@viragen/shared";
-import type { ScenarioScene } from "@viragen/shared";
+import type { ScenarioScene, StyleGuide } from "@viragen/shared";
 import { ScenarioSceneSchema } from "@viragen/shared";
+import { isStyleGuideEmpty } from "@viragen/shared";
 import { z } from "zod";
 import { getLLMProvider } from "../providers/registry.js";
-import { getScenarioSystemPrompt, getScenarioUserPrompt } from "../prompts/scenario.js";
+import {
+  getScenarioSystemPrompt,
+  getScenarioUserPrompt,
+  formatStyleGuideForPrompt,
+} from "../prompts/scenario.js";
 import { authenticate, requireScope } from "../middleware/auth.js";
 
 const router = Router();
@@ -16,6 +21,17 @@ const RequestSchema = z.object({
   intent: UserIntentSchema,
   systemPrompt: z.string().optional(),
   knowledge: z.string().optional(),
+  styleGuide: z
+    .object({
+      tone: z.string().optional(),
+      color_palette: z.array(z.string()).optional(),
+      tempo: z.enum(["fast", "medium", "slow"]).optional(),
+      camera_style: z.string().optional(),
+      brand_voice: z.string().optional(),
+      must_include: z.array(z.string()).optional(),
+      must_avoid: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 router.post("/", requireScope("ai:generate"), async (req, res, next) => {
@@ -29,20 +45,33 @@ router.post("/", requireScope("ai:generate"), async (req, res, next) => {
       return;
     }
 
-    const { analysis, intent, systemPrompt: customSystemPrompt, knowledge } = RequestSchema.parse(req.body);
+    const {
+      analysis,
+      intent,
+      systemPrompt: customSystemPrompt,
+      knowledge,
+      styleGuide,
+    } = RequestSchema.parse(req.body);
     const provider = getLLMProvider(providerId);
 
-    const baseSystemPrompt = customSystemPrompt?.trim() || getScenarioSystemPrompt();
+    let baseSystemPrompt = customSystemPrompt?.trim() || getScenarioSystemPrompt();
+    if (styleGuide && !isStyleGuideEmpty(styleGuide as StyleGuide)) {
+      baseSystemPrompt += "\n\n" + formatStyleGuideForPrompt(styleGuide as StyleGuide);
+    }
     const systemPrompt = knowledge?.trim()
-      ? `${baseSystemPrompt}\n\n## Proje bilgisi (bu projeyi anlamak için)\n${knowledge.trim()}`
+      ? `${baseSystemPrompt}\n\n## Project information (to understand this project)\n${knowledge.trim()}`
       : baseSystemPrompt;
     const userPrompt = getScenarioUserPrompt(analysis, intent);
 
-    const response = await provider.generate(systemPrompt, userPrompt, apiKey, modelId);
+    console.log(`[scenario] provider=${providerId} model=${modelId}`);
+    console.log("[scenario] system prompt:\n", systemPrompt);
+    console.log("[scenario] user prompt:\n", userPrompt);
 
+    const response = await provider.generate(systemPrompt, userPrompt, apiKey, modelId);
     // Parse the JSON array from response
     const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error("Failed to parse scenario response as JSON");
+    console.log("[scenario] response:\n", response);
 
     const raw = JSON.parse(jsonMatch[1] || jsonMatch[0]);
     const scenes: ScenarioScene[] = z.array(ScenarioSceneSchema).parse(raw);

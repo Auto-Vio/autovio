@@ -1,15 +1,40 @@
-import type { AnalysisResult, UserIntent } from "@viragen/shared";
+import type { AnalysisResult, UserIntent, StyleGuide } from "@viragen/shared";
+import { DEFAULT_SCENARIO_SYSTEM_PROMPT } from "@viragen/shared";
 
+/**
+ * Format StyleGuide into markdown for scenario system prompt
+ */
+export function formatStyleGuideForPrompt(guide: StyleGuide): string {
+  const parts: string[] = ["## Project Style Guide"];
+
+  if (guide.tone) {
+    parts.push(`**Tone:** ${guide.tone}`);
+  }
+  if (guide.color_palette?.length) {
+    parts.push(`**Color Palette:** ${guide.color_palette.join(", ")}`);
+  }
+  if (guide.tempo) {
+    parts.push(`**Tempo:** ${guide.tempo}-paced`);
+  }
+  if (guide.camera_style) {
+    parts.push(`**Camera Style:** ${guide.camera_style}`);
+  }
+  if (guide.brand_voice) {
+    parts.push(`**Brand Voice:** ${guide.brand_voice}`);
+  }
+  if (guide.must_include?.length) {
+    parts.push(`**Must Include:** ${guide.must_include.join(", ")}`);
+  }
+  if (guide.must_avoid?.length) {
+    parts.push(`**Must Avoid:** ${guide.must_avoid.join(", ")}`);
+  }
+
+  return parts.join("\n");
+}
+
+/** Returns the default scenario system prompt. Sourced from shared so new projects and fallback use the same text. */
 export function getScenarioSystemPrompt(): string {
-  return `You are a creative director specializing in social media video production.
-Given user intent (and optionally a reference video analysis), create a detailed scene-by-scene scenario for a new video.
-Each scene must have prompts ready for AI image and video generation.
-
-For image prompts: Be highly descriptive, include lighting, lens type, style, quality keywords.
-For video prompts: Describe camera movement, motion, and cinematic style.
-For negative prompts: List what should NOT appear in the image.
-
-Return ONLY a JSON array of scenes.`;
+  return DEFAULT_SCENARIO_SYSTEM_PROMPT;
 }
 
 export function getScenarioUserPrompt(analysis: AnalysisResult | undefined, intent: UserIntent): string {
@@ -41,12 +66,14 @@ Target Audience: ${intent.target_audience || "General"}`;
 
   return `${analysisSection}## User Intent
 ${intentDescription}
+
+Important: The scenes must form one continuous video. Each scene is the continuation of the previous one (same story, same world, same characters). Do not produce unrelated or disjointed shots.
 ${intent.language ? `Language: ${intent.language}` : ""}
 ${intent.video_duration ? `Target total video duration: ${intent.video_duration} seconds. Create as many scenes as needed so that the sum of each scene's duration_seconds is about ${intent.video_duration}.` : "Default: create 4-6 scenes, 3-5 seconds each."}
 ${intent.scene_count ? `Create exactly ${intent.scene_count} scenes.` : ""}
 
 ## Output Format
-Return a JSON array where each element has:
+Return a JSON array of scenes in order. The array is a single sequence: scene at index 1 continues from the scene at index 0, and so on. Each element must have:
 {
   "scene_index": <number>,
   "duration_seconds": <number> (length of this scene in seconds; all scenes' duration_seconds should add up to the target total if one was given),
@@ -55,5 +82,6 @@ Return a JSON array where each element has:
   "video_prompt": "<camera/motion description for image-to-video>",
   "text_overlay": "<text to show, if any>",
   "transition": "<transition to next scene>"
-}`;
+}
+Ensure narrative and visual continuity across all scenes so the result is one coherent video.`;
 }

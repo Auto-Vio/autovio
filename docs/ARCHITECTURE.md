@@ -32,6 +32,7 @@ ViraGen is a full-stack AI-powered video generation platform. It enables users t
 - Upload and analyze reference videos using AI vision models
 - Generate scene-by-scene scenarios using LLM providers
 - Create images and videos for each scene using AI generation models
+- **Project-level structured style guide** (tone, color palette, tempo, camera style, brand voice) applied to scenario, image, and video generation for consistency across works
 - Edit and arrange clips in a timeline editor
 - Export final videos with text overlays and transitions
 
@@ -131,7 +132,10 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 │   │   │   │   └── upload.ts       # File upload configuration
 │   │   │   ├── prompts/            # AI prompt templates
 │   │   │   │   ├── analyzer.ts     # Video analysis prompts
-│   │   │   │   └── scenario.ts     # Scenario generation prompts
+│   │   │   │   ├── scenario.ts     # Scenario generation prompts
+│   │   │   │   ├── style-guide.ts  # Style guide extraction prompt
+│   │   │   │   ├── image.ts        # Image style prefix (from StyleGuide)
+│   │   │   │   └── video.ts        # Video style prefix (from StyleGuide)
 │   │   │   ├── providers/          # AI service integrations
 │   │   │   │   ├── interfaces.ts   # Provider interface definitions
 │   │   │   │   ├── registry.ts     # Provider registration
@@ -147,6 +151,7 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 │   │   │   │   ├── analyze.ts      # Video analysis
 │   │   │   │   ├── scenario.ts     # Scenario generation
 │   │   │   │   ├── generate.ts     # Image/video generation
+│   │   │   │   ├── style-guide.ts  # Style guide extraction (AI)
 │   │   │   │   ├── export.ts       # Final video export
 │   │   │   │   └── providers.ts    # Provider listing
 │   │   │   ├── storage/            # File storage logic
@@ -168,7 +173,7 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 │   │   │   │   │   ├── ScenarioStep.tsx
 │   │   │   │   │   ├── GenerateStep.tsx
 │   │   │   │   │   └── EditorStep.tsx
-│   │   │   │   └── ui/             # Shared UI components
+│   │   │   │   └── ui/             # Shared UI components (incl. StyleGuideForm.tsx)
 │   │   │   ├── hooks/              # Custom React hooks
 │   │   │   ├── storage/            # Project storage API wrapper
 │   │   │   ├── store/              # Zustand state stores
@@ -185,6 +190,7 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 │           ├── types/              # Type definitions
 │           │   ├── analysis.ts     # AnalysisResult, SceneAnalysis
 │           │   ├── scenario.ts     # UserIntent, ScenarioScene
+│           │   ├── style-guide.ts  # StyleGuide, styleGuideFromAnalysis, isStyleGuideEmpty
 │           │   ├── project.ts      # Project, WorkSnapshot
 │           │   ├── provider.ts     # ProviderConfig, ProviderInfo
 │           │   ├── video.ts        # VideoClip, ExportRequest
@@ -289,6 +295,8 @@ ViraGen implements a 5-step video generation workflow. Each step builds upon the
 - Provider: Vision provider (Gemini/Claude/OpenAI)
 - Headers: `x-vision-provider`, `x-model-id`, `x-api-key`
 
+**Style Guide**: After analysis, user can click "Save as Project Style Guide" to map analysis (tone, color_palette, tempo, camera from first scene) into the project’s optional `styleGuide`; this is then used in scenario, image, and video generation.
+
 **Output**: AnalysisResult object containing:
 - scene_count: Number of detected scenes
 - overall_tone: Descriptive tone (e.g., "energetic", "professional")
@@ -320,6 +328,7 @@ ViraGen implements a 5-step video generation workflow. Each step builds upon the
 - intent: UserIntent (mode, product info, duration, scene count)
 - systemPrompt: Custom system instructions (optional)
 - knowledge: Additional context (optional)
+- styleGuide: Optional project StyleGuide; when present and non-empty, appended to system prompt as "## Project Style Guide" (tone, color palette, tempo, camera style, brand voice, must_include, must_avoid)
 
 **Output**: Array of ScenarioScene objects containing:
 - scene_index: Scene number
@@ -345,7 +354,8 @@ ViraGen implements a 5-step video generation workflow. Each step builds upon the
 
 **Data Flow**:
 - Frontend: `GenerateStep.tsx`, `SidePanel.tsx`, `ImageEditPanel.tsx`, `VideoEditPanel.tsx`, `AuthenticatedMedia.tsx`
-- API: `POST /api/generate/image`, `POST /api/generate/video` (unchanged)
+- API: `POST /api/generate/image`, `POST /api/generate/video`
+- Frontend sends project `styleGuide` in request body when present; backend builds a **style prefix** and prepends it to the scene prompt (image: color/tone/tempo → visual style; video: camera/tempo/tone → motion style), then appends custom instruction and scene prompt.
 - Image Provider: DALL-E/Gemini; Video Provider: Runway/Gemini
 - Storage: `POST /api/projects/:id/works/:id/media/scene/:index/image|video`
 - Media URLs that point to own API (`/api/.../media/...`) are fetched with auth and shown via blob URLs (hook `useAuthenticatedMediaUrl`) so previews do not trigger 401.
@@ -476,6 +486,7 @@ All endpoints are prefixed with `/api`. Authentication uses JWT Bearer tokens un
 - id, userId, name
 - systemPrompt: Default LLM instructions
 - knowledge: Project context for AI
+- styleGuide: Optional structured style guide (tone, color_palette, tempo, camera_style, brand_voice, must_include, must_avoid); applied in scenario, image, and video generation
 - analyzerPrompt, imageSystemPrompt, videoSystemPrompt: Custom prompts
 - createdAt, updatedAt
 
@@ -523,8 +534,18 @@ All endpoints are prefixed with `/api`. Authentication uses JWT Bearer tokens un
 | POST | `/api/scenario` | Yes | ai:generate | Generate scene scenarios |
 
 - Headers: `x-llm-provider`, `x-model-id`, `x-api-key`
-- Request: `{ analysis?, intent, systemPrompt?, knowledge? }`
+- Request: `{ analysis?, intent, systemPrompt?, knowledge?, styleGuide? }`
 - Response: `{ scenes: ScenarioScene[] }`
+
+**Style Guide Extraction**
+
+| Method | Endpoint | Auth | Scope | Description |
+|--------|----------|------|-------|-------------|
+| POST | `/api/style-guide/extract` | Yes | ai:generate | Extract structured StyleGuide from free-form text (LLM) |
+
+- Headers: `x-llm-provider`, `x-model-id`, `x-api-key`
+- Request: `{ text: string }`
+- Response: `{ styleGuide: StyleGuide }`
 
 **Image Generation**
 
@@ -533,8 +554,9 @@ All endpoints are prefixed with `/api`. Authentication uses JWT Bearer tokens un
 | POST | `/api/generate/image` | Yes | ai:generate | Generate image from prompt |
 
 - Headers: `x-image-provider`, `x-model-id`, `x-api-key`
-- Request: `{ prompt, negative_prompt?, image_instruction? }`
+- Request: `{ prompt, negative_prompt?, image_instruction?, styleGuide? }`
 - Response: `{ imageUrl: string }`
+- **Style guide**: When `styleGuide` is present and non-empty, backend builds a style prefix (color palette, tone, tempo → visual style keywords) and prepends it to the prompt: `[style prefix] + [image_instruction] + [scene prompt]`.
 
 **Video Generation**
 
@@ -543,8 +565,9 @@ All endpoints are prefixed with `/api`. Authentication uses JWT Bearer tokens un
 | POST | `/api/generate/video` | Yes | ai:generate | Convert image to video |
 
 - Headers: `x-video-provider`, `x-model-id`, `x-api-key`
-- Request: `{ image_url, prompt, duration?, video_instruction? }`
+- Request: `{ image_url, prompt, duration?, video_instruction?, styleGuide? }`
 - Response: `{ videoUrl: string }`
+- **Style guide**: When `styleGuide` is present and non-empty, backend builds a style prefix (camera_style, tempo, tone → motion/cinematic keywords) and prepends it to the prompt: `[style prefix] + [video_instruction] + [scene prompt]`.
 - **Internal image URLs**: If `image_url` is an own media path (`/api/projects/.../works/.../media/scene/:index/image`), the backend fetches the image with the request’s auth, converts it to a data URL, and passes that to the video provider so the provider does not receive 401 when loading the image.
 
 ---
@@ -618,6 +641,7 @@ ViraGen uses MongoDB with Mongoose ODM. All models use custom string IDs (not Ob
 | name | String | Yes | Project name |
 | systemPrompt | String | Yes | Default LLM system prompt |
 | knowledge | String | No | Additional AI context |
+| styleGuide | Object | No | Optional StyleGuide (tone, color_palette[], tempo, camera_style, brand_voice, must_include[], must_avoid[]) |
 | analyzerPrompt | String | No | Video analysis prompt |
 | imageSystemPrompt | String | No | Image generation prompt |
 | videoSystemPrompt | String | No | Video generation prompt |
@@ -885,6 +909,7 @@ Main application state containing:
 - currentProject: Selected project
 - works: Work list for current project
 - currentWork: Selected work (WorkSnapshot)
+- projectStyleGuide: Project’s optional StyleGuide (set when loading a work via `loadWork`); passed to scenario, image, and video API calls
 - Pipeline state: currentStep, mode, productName, productDescription, etc.
 - analysis: AnalysisResult from video analysis
 - scenes: ScenarioScene array
@@ -939,11 +964,11 @@ These are read by `api/client.ts` and sent as headers with each AI-related reque
 |---------|-----------|
 | Backend entry | packages/backend/src/index.ts |
 | Frontend entry | packages/frontend/src/main.tsx |
-| Shared types | packages/shared/src/index.ts |
+| Shared types | packages/shared/src/index.ts (includes types/style-guide.ts) |
 | Auth routes | packages/backend/src/routes/auth.ts |
 | Project routes | packages/backend/src/routes/projects.ts |
 | Work routes | packages/backend/src/routes/works.ts |
-| AI routes | packages/backend/src/routes/analyze.ts, scenario.ts, generate.ts |
+| AI routes | packages/backend/src/routes/analyze.ts, scenario.ts, generate.ts, style-guide.ts |
 | Provider interfaces | packages/backend/src/providers/interfaces.ts |
 | Provider registry | packages/backend/src/providers/registry.ts |
 | User model | packages/backend/src/db/models/User.ts |
@@ -955,6 +980,7 @@ These are read by `api/client.ts` and sent as headers with each AI-related reque
 | Pipeline steps | packages/frontend/src/components/steps/*.tsx |
 | Side panel (Generate) | packages/frontend/src/components/ui/SidePanel.tsx |
 | Image/Video edit panels | packages/frontend/src/components/steps/ImageEditPanel.tsx, VideoEditPanel.tsx |
+| Style guide form | packages/frontend/src/components/ui/StyleGuideForm.tsx |
 | Auth-resolved media (img/video) | packages/frontend/src/components/ui/AuthenticatedMedia.tsx |
 | Auth media URL hook | packages/frontend/src/hooks/useAuthenticatedMediaUrl.ts |
 

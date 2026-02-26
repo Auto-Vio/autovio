@@ -9,7 +9,7 @@ export default function ScenarioStep() {
     analysis, hasReferenceVideo, mode, productName, productDescription, targetAudience,
     language, videoDuration, sceneCount,
     scenes, scenarioLoading, scenarioError,
-    workSystemPrompt, projectKnowledge,
+    workSystemPrompt, projectKnowledge, projectStyleGuide,
     setScenes, updateScene, removeScene, setScenarioLoading, setScenarioError,
     setStep,
   } = useStore();
@@ -31,7 +31,11 @@ export default function ScenarioStep() {
         video_duration: videoDuration,
         scene_count: sceneCount,
       },
-      { systemPrompt: workSystemPrompt || undefined, knowledge: projectKnowledge || undefined }
+      {
+        systemPrompt: workSystemPrompt || undefined,
+        knowledge: projectKnowledge || undefined,
+        styleGuide: projectStyleGuide,
+      }
     )
       .then(setScenes)
       .catch((err) => setScenarioError(err.message))

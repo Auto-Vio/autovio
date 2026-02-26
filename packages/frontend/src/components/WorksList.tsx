@@ -3,10 +3,12 @@ import { useState, useEffect, useRef } from "react";
 import { useStore } from "../store/useStore";
 import { useToastStore } from "../store/useToastStore";
 import { listWorks, deleteWork, getProject, saveProject } from "../storage/projectStorage";
-import type { WorkMeta, Project } from "@viragen/shared";
+import { extractStyleGuide } from "../api/client";
+import type { WorkMeta, Project, StyleGuide } from "@viragen/shared";
 import { DEFAULT_ANALYZER_PROMPT } from "@viragen/shared";
 import ConfirmModal from "./ui/ConfirmModal";
 import { SkeletonCardList } from "./ui/SkeletonCard";
+import { StyleGuideForm } from "./ui/StyleGuideForm";
 
 interface WorksListProps {
   projectId: string;
@@ -28,6 +30,8 @@ export default function WorksList({ projectId }: WorksListProps) {
   const [editAnalyzerPrompt, setEditAnalyzerPrompt] = useState("");
   const [editImageSystemPrompt, setEditImageSystemPrompt] = useState("");
   const [editVideoSystemPrompt, setEditVideoSystemPrompt] = useState("");
+  const [editStyleGuide, setEditStyleGuide] = useState<StyleGuide | undefined>(undefined);
+  const [isExtractingStyleGuide, setIsExtractingStyleGuide] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -44,6 +48,7 @@ export default function WorksList({ projectId }: WorksListProps) {
         setEditName(p.name);
         setEditSystemPrompt(p.systemPrompt);
         setEditKnowledge(p.knowledge ?? "");
+        setEditStyleGuide(p.styleGuide);
         setEditAnalyzerPrompt(p.analyzerPrompt?.trim() ? p.analyzerPrompt : DEFAULT_ANALYZER_PROMPT);
         setEditImageSystemPrompt(p.imageSystemPrompt ?? "");
         setEditVideoSystemPrompt(p.videoSystemPrompt ?? "");
@@ -97,6 +102,24 @@ export default function WorksList({ projectId }: WorksListProps) {
     }
   };
 
+  const handleExtractStyleGuide = async () => {
+    if (!editKnowledge?.trim()) {
+      addToast("Please enter some context first", "error");
+      return;
+    }
+    setIsExtractingStyleGuide(true);
+    try {
+      const result = await extractStyleGuide(editKnowledge);
+      setEditStyleGuide(result.styleGuide);
+      addToast("Style guide extracted successfully", "success");
+    } catch (err) {
+      console.error("Failed to extract style guide:", err);
+      addToast("Failed to extract style guide", "error");
+    } finally {
+      setIsExtractingStyleGuide(false);
+    }
+  };
+
   const handleSaveProject = async () => {
     if (!project) return;
     setSavingProject(true);
@@ -106,6 +129,7 @@ export default function WorksList({ projectId }: WorksListProps) {
         name: editName,
         systemPrompt: editSystemPrompt,
         knowledge: editKnowledge,
+        styleGuide: editStyleGuide,
         analyzerPrompt: editAnalyzerPrompt.trim() === DEFAULT_ANALYZER_PROMPT ? "" : editAnalyzerPrompt.trim(),
         imageSystemPrompt: editImageSystemPrompt,
         videoSystemPrompt: editVideoSystemPrompt,
@@ -182,6 +206,14 @@ export default function WorksList({ projectId }: WorksListProps) {
                   rows={3}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
                   placeholder="Product, audience, language, style — sent with every AI request"
+                />
+              </div>
+              <div className="mt-4">
+                <StyleGuideForm
+                  value={editStyleGuide}
+                  onChange={setEditStyleGuide}
+                  onExtract={handleExtractStyleGuide}
+                  isExtracting={isExtractingStyleGuide}
                 />
               </div>
             </div>

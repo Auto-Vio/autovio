@@ -1,4 +1,4 @@
-import type { AnalysisResult, ScenarioScene, ProviderInfo, ProviderConfig } from "@viragen/shared";
+import type { AnalysisResult, ScenarioScene, ProviderInfo, ProviderConfig, StyleGuide } from "@viragen/shared";
 import { getAuthToken } from "../store/useAuthStore";
 
 const DEFAULT_CONFIG: ProviderConfig = {
@@ -80,7 +80,7 @@ export async function analyzeVideo(
 export async function buildScenario(
   analysis: AnalysisResult | null,
   intent: { mode: string; product_name?: string; product_description?: string; target_audience?: string; language?: string; video_duration?: number; scene_count?: number },
-  options?: { systemPrompt?: string; knowledge?: string },
+  options?: { systemPrompt?: string; knowledge?: string; styleGuide?: StyleGuide },
 ): Promise<ScenarioScene[]> {
   const headers = getHeaders("llm");
 
@@ -98,6 +98,7 @@ export async function buildScenario(
       intent,
       systemPrompt: options?.systemPrompt,
       knowledge: options?.knowledge,
+      styleGuide: options?.styleGuide,
     }),
   });
 
@@ -123,7 +124,7 @@ async function parseErrorResponse(res: Response): Promise<string> {
 export async function generateImage(
   prompt: string,
   negativePrompt: string,
-  options?: { imageInstruction?: string },
+  options?: { imageInstruction?: string; styleGuide?: StyleGuide },
 ): Promise<string> {
   const headers = getHeaders("image");
 
@@ -140,6 +141,7 @@ export async function generateImage(
       prompt,
       negative_prompt: negativePrompt,
       image_instruction: options?.imageInstruction?.trim() || undefined,
+      styleGuide: options?.styleGuide,
     }),
   });
 
@@ -157,7 +159,7 @@ export async function generateVideo(
   imageUrl: string,
   prompt: string,
   duration: number,
-  options?: { videoInstruction?: string },
+  options?: { videoInstruction?: string; styleGuide?: StyleGuide },
 ): Promise<string> {
   const headers = getHeaders("video");
 
@@ -175,6 +177,7 @@ export async function generateVideo(
       prompt,
       duration,
       video_instruction: options?.videoInstruction?.trim() || undefined,
+      styleGuide: options?.styleGuide,
     }),
   });
 
@@ -192,5 +195,28 @@ export async function fetchProviders(): Promise<ProviderInfo[]> {
   const res = await fetch("/api/providers", {
     headers: getAuthHeader(),
   });
+  return res.json();
+}
+
+/**
+ * Extract structured style guide from free-form text using AI
+ */
+export async function extractStyleGuide(text: string): Promise<{ styleGuide: StyleGuide }> {
+  const headers = getHeaders("llm");
+  const res = await fetch("/api/style-guide/extract", {
+    method: "POST",
+    headers: {
+      ...getAuthHeader(),
+      "Content-Type": "application/json",
+      "x-llm-provider": headers["x-llm-provider"],
+      "x-model-id": headers["x-model-id"],
+      "x-api-key": headers["x-api-key"],
+    },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const message = await parseErrorResponse(res);
+    throw new Error(message);
+  }
   return res.json();
 }

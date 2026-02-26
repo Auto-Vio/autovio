@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { Project } from "@viragen/shared";
+import type { Project, StyleGuide } from "@viragen/shared";
 
 export interface ProjectDocument {
   _id: string;
@@ -12,7 +12,21 @@ export interface ProjectDocument {
   analyzerPrompt?: string;
   imageSystemPrompt?: string;
   videoSystemPrompt?: string;
+  styleGuide?: StyleGuide;
 }
+
+const StyleGuideSchema = new Schema(
+  {
+    tone: { type: String },
+    color_palette: [{ type: String }],
+    tempo: { type: String, enum: ["fast", "medium", "slow"] },
+    camera_style: { type: String },
+    brand_voice: { type: String },
+    must_include: [{ type: String }],
+    must_avoid: [{ type: String }],
+  },
+  { _id: false }
+);
 
 const ProjectSchema = new Schema(
   {
@@ -26,6 +40,7 @@ const ProjectSchema = new Schema(
     analyzerPrompt: { type: String, default: "" },
     imageSystemPrompt: { type: String, default: "" },
     videoSystemPrompt: { type: String, default: "" },
+    styleGuide: { type: StyleGuideSchema, default: null },
   },
   {
     _id: false,
@@ -50,5 +65,6 @@ export function toProject(doc: ProjectDocument): Project {
     analyzerPrompt: doc.analyzerPrompt,
     imageSystemPrompt: doc.imageSystemPrompt,
     videoSystemPrompt: doc.videoSystemPrompt,
+    styleGuide: doc.styleGuide || undefined,
   };
 }

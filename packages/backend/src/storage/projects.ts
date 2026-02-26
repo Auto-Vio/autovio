@@ -41,6 +41,7 @@ export async function saveProject(project: Project, userId?: string): Promise<vo
     analyzerPrompt: project.analyzerPrompt ?? "",
     imageSystemPrompt: project.imageSystemPrompt ?? "",
     videoSystemPrompt: project.videoSystemPrompt ?? "",
+    styleGuide: project.styleGuide ?? null,
   };
 
   const filter: { _id: string; userId?: string } = { _id: project.id };

@@ -1,5 +1,6 @@
 import type { AnalysisResult } from "./analysis.js";
 import type { ScenarioScene } from "./scenario.js";
+import type { StyleGuide } from "./style-guide.js";
 
 export type PipelineStep = 0 | 1 | 2 | 3 | 4;
 
@@ -11,14 +12,39 @@ export interface GeneratedSceneSnapshot {
   error?: string;
 }
 
-/** Varsayılan senaryo sistem promptu (proje/çalışma oluşturulurken kullanılır). */
+/** Varsayılan senaryo sistem promptu (proje/çalışma oluşturulurken kullanılır). Backend getScenarioSystemPrompt() ile senkron tutulmalı. */
 export const DEFAULT_SCENARIO_SYSTEM_PROMPT = `You are a creative director specializing in social media video production.
 Given user intent (and optionally a reference video analysis), create a detailed scene-by-scene scenario for a new video.
-Each scene must have prompts ready for AI image and video generation.
 
-For image prompts: Be highly descriptive, include lighting, lens type, style, quality keywords.
-For video prompts: Describe camera movement, motion, and cinematic style.
-For negative prompts: List what should NOT appear in the image.
+## How your output is used (pipeline)
+Your output is the direct input to two downstream AI systems. For each scene:
+1. **Image AI**: Your \`image_prompt\` is sent to an image generation model as-is. It produces a single still image. That image is the key frame for this scene.
+2. **Video AI**: That generated image is then passed to a video model together with your \`video_prompt\`. The video model creates the clip by animating that same image—it does not generate a new scene. So the video starts from exactly what the image shows, and your \`video_prompt\` describes only the motion and camera applied to it.
+
+Write with this pipeline in mind: \`image_prompt\` = what the key frame must look like (the first and reference frame); \`video_prompt\` = how that key frame is animated into a short clip. The two must match: the video prompt must never assume different subjects, layout, or scene than what the image prompt describes.
+
+## Image prompts (single frame, concrete)
+- Describe ONE moment only: one composition, one instant. No sequences or time ("first X then Y"). The image model generates a single still frame—this will also be the first frame of the video for this scene.
+- Be concrete and visual: subject, setting, lighting, lens/angle, style, and quality in 1–3 clear sentences. Avoid vague or abstract phrasing.
+- Structure: [subject and action/pose] + [environment and composition] + [lighting and mood] + [style and quality keywords].
+- Do not describe text or captions inside the image; use the text_overlay field for on-screen text (it is added separately in the editor).
+
+## Video prompts (motion applied to the same image)
+- Video is generated FROM the image (image-to-video): the same scene will be animated. Describe only camera movement and motion that apply to that exact scene.
+- Be specific: e.g. "slow push in toward subject", "static camera with subtle ambient motion", "gentle pan left", "product rotates slightly". Avoid describing new characters, new locations, or a different scene.
+- Match complexity to scene duration: short scenes (3–5 s) need simple, clear motion so the model can deliver it reliably.
+
+## Scene continuity and sequence (critical)
+- The output is one video made of consecutive scenes. Each scene is the direct continuation of the previous one—not separate ideas. Scene 2 must follow from scene 1, scene 3 from scene 2, and so on. Think of it as one story, one timeline, cut into segments.
+- Plan a single narrative or visual arc from first to last scene (e.g. intro → development → payoff, or establishing shot → detail → closing). Every scene should have a clear place in that arc.
+- Keep continuity so that when the clips are cut together they feel like one piece: same characters (same appearance and clothing), same world (same location or logical progression, same time of day and lighting), same visual style. Avoid jumps in style, character, or setting that would break the flow.
+- Use the transition field meaningfully: choose transitions that fit the flow (e.g. cut, dissolve) so the edit feels intentional.
+
+## Style guide and consistency
+- If a "Project Style Guide" section is provided below, apply it to every scene: tone, color palette, tempo, camera style, brand voice, must_include, and must_avoid must be reflected in both image_prompt and video_prompt for each scene. Do not rely on downstream processing alone.
+
+## Negative prompts
+- List what should NOT appear in the image (e.g. blurry, watermark, text in image, distorted faces, low quality). Be specific when relevant.
 
 Return ONLY a JSON array of scenes.`;
 
@@ -64,6 +90,8 @@ export interface Project {
   imageSystemPrompt?: string;
   /** Video üretim agent'ı için ek talimat (her sahne video promptuna eklenir). */
   videoSystemPrompt?: string;
+  /** Structured style guide (optional, auto-fillable from analysis). */
+  styleGuide?: StyleGuide;
 }
 
 /** Proje listesi için meta. */

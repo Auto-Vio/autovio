@@ -84,7 +84,7 @@ export async function createWork(projectId: string, name?: string): Promise<Work
     imageSystemPrompt: project.imageSystemPrompt ?? "",
     videoSystemPrompt: project.videoSystemPrompt ?? "",
     currentStep: 0,
-    hasReferenceVideo: true,
+    hasReferenceVideo: false,
     mode: "style_transfer",
     productName: "",
     productDescription: "",

@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { getImageProvider, getVideoProvider } from "../providers/registry.js";
+import { isStyleGuideEmpty } from "@viragen/shared";
+import type { StyleGuide } from "@viragen/shared";
+import { buildImageStylePrefix } from "../prompts/image.js";
+import { buildVideoStylePrefix } from "../prompts/video.js";
 import { authenticate, requireScope } from "../middleware/auth.js";
 
 const router = Router();
@@ -40,10 +44,23 @@ async function resolveImageUrlForVideo(
   return `data:${mime};base64,${base64}`;
 }
 
+const StyleGuideSchema = z
+  .object({
+    tone: z.string().optional(),
+    color_palette: z.array(z.string()).optional(),
+    tempo: z.enum(["fast", "medium", "slow"]).optional(),
+    camera_style: z.string().optional(),
+    brand_voice: z.string().optional(),
+    must_include: z.array(z.string()).optional(),
+    must_avoid: z.array(z.string()).optional(),
+  })
+  .optional();
+
 const ImageRequestSchema = z.object({
   prompt: z.string(),
   negative_prompt: z.string().default(""),
   image_instruction: z.string().optional(),
+  styleGuide: StyleGuideSchema,
 });
 
 const VideoRequestSchema = z.object({
@@ -51,6 +68,7 @@ const VideoRequestSchema = z.object({
   prompt: z.string(),
   duration: z.number().default(5),
   video_instruction: z.string().optional(),
+  styleGuide: StyleGuideSchema,
 });
 
 /** Validate modelId against provider's supported models, fallback to first if invalid */
@@ -79,12 +97,22 @@ router.post("/image", requireScope("ai:generate"), async (req, res, next) => {
       return;
     }
 
-    const { prompt, negative_prompt, image_instruction } = ImageRequestSchema.parse(req.body);
+    const { prompt, negative_prompt, image_instruction, styleGuide } =
+      ImageRequestSchema.parse(req.body);
     const provider = getImageProvider(providerId);
     const modelId = resolveModelId(rawModelId, provider.models);
-    const fullPrompt = image_instruction?.trim() ? `${image_instruction.trim()}\n\n${prompt}` : prompt;
 
-    console.log(`[generate/image] provider=${providerId} model=${modelId} prompt="${fullPrompt.slice(0, 80)}..."`);
+    let fullPrompt = "";
+    if (styleGuide && !isStyleGuideEmpty(styleGuide as StyleGuide)) {
+      const prefix = buildImageStylePrefix(styleGuide as StyleGuide);
+      if (prefix) fullPrompt += prefix + "\n\n";
+    }
+    if (image_instruction?.trim()) fullPrompt += image_instruction.trim() + "\n\n";
+    fullPrompt += prompt;
+
+    console.log(`[generate/image] provider=${providerId} model=${modelId}`);
+    console.log("[generate/image] full prompt:\n", fullPrompt);
+    if (negative_prompt) console.log("[generate/image] negative_prompt:\n", negative_prompt);
 
     const imageUrl = await provider.generate(fullPrompt, negative_prompt, apiKey, modelId);
 
@@ -106,15 +134,24 @@ router.post("/video", requireScope("ai:generate"), async (req, res, next) => {
       return;
     }
 
-    const { image_url, prompt, duration, video_instruction } = VideoRequestSchema.parse(req.body);
+    const { image_url, prompt, duration, video_instruction, styleGuide } =
+      VideoRequestSchema.parse(req.body);
     const provider = getVideoProvider(providerId);
     const modelId = resolveModelId(rawModelId, provider.models);
-    const fullPrompt = video_instruction?.trim() ? `${video_instruction.trim()}\n\n${prompt}` : prompt;
+
+    let fullPrompt = "";
+    if (styleGuide && !isStyleGuideEmpty(styleGuide as StyleGuide)) {
+      const prefix = buildVideoStylePrefix(styleGuide as StyleGuide);
+      if (prefix) fullPrompt += prefix + "\n\n";
+    }
+    if (video_instruction?.trim()) fullPrompt += video_instruction.trim() + "\n\n";
+    fullPrompt += prompt;
 
     const authHeader = req.headers.authorization as string | undefined;
     const resolvedImageUrl = await resolveImageUrlForVideo(image_url, authHeader);
 
-    console.log(`[generate/video] provider=${providerId} model=${modelId} duration=${duration}s prompt="${fullPrompt.slice(0, 80)}..."`);
+    console.log(`[generate/video] provider=${providerId} model=${modelId} duration=${duration}s`);
+    console.log("[generate/video] full prompt:\n", fullPrompt);
 
     const videoUrl = await provider.convert(resolvedImageUrl, fullPrompt, duration, apiKey, modelId);
 
