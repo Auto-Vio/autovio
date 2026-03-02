@@ -23,6 +23,8 @@ export interface ExportRequestClip {
   position: number;
   end: number;
   cutFrom?: number;
+  transition?: string;
+  transitionDuration?: number;
 }
 
 export interface ExportRequestText {
@@ -41,7 +43,7 @@ export interface ExportRequest {
   projectId: string;
   workId: string;
   clips: ExportRequestClip[];
-  audio?: { volume?: number };
+  audio?: { volume?: number; audioUrl?: string };
   texts?: ExportRequestText[];
   options: {
     width: number;

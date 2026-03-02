@@ -24,6 +24,7 @@ interface EditorTimelineProps {
   selectedItem: SelectedItem;
   onSelectItem: (item: SelectedItem) => void;
   onTimeUpdate?: (time: number) => void;
+  onClipResize?: (actionId: string, trimStart: number, trimEnd: number) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -55,6 +56,7 @@ export default function EditorTimeline({
   selectedItem,
   onSelectItem,
   onTimeUpdate,
+  onClipResize,
 }: EditorTimelineProps) {
   const timelineRef = useRef<TimelineState>(null);
   const [scaleWidth, setScaleWidth] = useState(DEFAULT_SCALE_WIDTH);
@@ -169,6 +171,7 @@ export default function EditorTimeline({
       row,
       start,
       end,
+      dir,
     }: {
       action: TimelineAction;
       row: TimelineRow;
@@ -182,9 +185,19 @@ export default function EditorTimeline({
         if (other.id === action.id) continue;
         if (start < other.end && end > other.start) return false;
       }
+      if (row.id === "video-track" && onClipResize) {
+        const meta = clipMeta[action.id];
+        if (meta) {
+          const curTrimStart = meta.trimStart ?? 0;
+          const curTrimEnd = meta.trimEnd ?? 0;
+          const newTrimStart = dir === "left" ? curTrimStart + (start - action.start) : curTrimStart;
+          const newTrimEnd = dir === "right" ? curTrimEnd + (action.end - end) : curTrimEnd;
+          onClipResize(action.id, Math.max(0, newTrimStart), Math.max(0, newTrimEnd));
+        }
+      }
       return undefined;
     },
-    [],
+    [clipMeta, onClipResize],
   );
 
   const handleClickAction = useCallback(

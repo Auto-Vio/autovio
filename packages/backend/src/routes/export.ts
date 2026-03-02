@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { EZFFMPEG } from "../lib/ezffmpeg/index.js";
 import type { ClipObj } from "../lib/ezffmpeg/index.js";
 import { projectExists } from "../storage/projects.js";
-import { resolveSceneVideoPath, workExists } from "../storage/works.js";
+import { resolveSceneVideoPath, workExists, getResolvedWorkAudioPath } from "../storage/works.js";
 import type { ExportRequest } from "@viragen/shared";
 
 const router = Router();
@@ -53,7 +53,24 @@ router.post("/", async (req, res, next) => {
         end: clip.end,
         cutFrom: clip.cutFrom ?? 0,
         volume: audio?.volume ?? 1,
+        transition: clip.transition,
+        transitionDuration: clip.transitionDuration,
       });
+    }
+
+    if (audio && (audio.audioUrl || true)) {
+      const audioPath = await getResolvedWorkAudioPath(projectId, workId);
+      if (audioPath) {
+        const videoTrackEnd = Math.max(...clips.map((c) => c.end), 0);
+        clipObjs.push({
+          type: "audio",
+          url: path.resolve(audioPath),
+          position: 0,
+          end: videoTrackEnd,
+          cutFrom: 0,
+          volume: audio.volume ?? 1,
+        });
+      }
     }
 
     // Add text overlays

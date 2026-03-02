@@ -1,4 +1,4 @@
-import { useMemo, forwardRef } from "react";
+import { useMemo, forwardRef, useRef, useState, useEffect } from "react";
 import type { TimelineEffect, EffectSourceParam } from "@xzdarcy/timeline-engine";
 import type {
   ClipMeta,
@@ -42,7 +42,7 @@ export function createVideoEffect(
           const video = videoRef.current;
           if (!video || video.paused) return;
           const localTime = time - action.start;
-          if (Math.abs(video.currentTime - localTime) > 0.3) {
+          if (Math.abs(video.currentTime - localTime) > 0.1) {
             video.currentTime = localTime;
           }
         },
@@ -70,10 +70,36 @@ const VideoPreview = forwardRef<HTMLVideoElement, VideoPreviewProps>(
     { clipMeta, selectedItem, textOverlays, editorData, currentTime, exportSettings },
     ref,
   ) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1);
+
+    // Calculate scale using ResizeObserver to handle container resizing
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const updateScale = () => {
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        if (!w || !h || !exportSettings.width || !exportSettings.height) return;
+        const scaleX = w / exportSettings.width;
+        const scaleY = h / exportSettings.height;
+        setScale(Math.min(scaleX, scaleY, 1));
+      };
+
+      // Initial calculation
+      updateScale();
+
+      // Use ResizeObserver for dynamic updates
+      const observer = new ResizeObserver(updateScale);
+      observer.observe(el);
+
+      return () => observer.disconnect();
+    }, [exportSettings.width, exportSettings.height]);
+
     const selectedMeta: ClipMeta | undefined =
       selectedItem?.type === "clip" ? clipMeta[selectedItem.actionId] : undefined;
 
-    // Find first clip with video to show if nothing selected
     const fallbackMeta = useMemo(() => {
       if (selectedMeta) return undefined;
       const videoTrack = editorData.find((r) => r.id === "video-track");
@@ -89,7 +115,6 @@ const VideoPreview = forwardRef<HTMLVideoElement, VideoPreviewProps>(
     const hasImage = !hasVideo && !!displayMeta?.imageUrl;
     const isEmpty = !hasVideo && !hasImage;
 
-    // Find visible text overlays based on currentTime
     const visibleTexts = useMemo(() => {
       const textTrack = editorData.find((r) => r.id === "text-track");
       if (!textTrack) return [];
@@ -99,50 +124,70 @@ const VideoPreview = forwardRef<HTMLVideoElement, VideoPreviewProps>(
         .filter(Boolean);
     }, [editorData, currentTime, textOverlays]);
 
+    // Ensure scale is valid (at least a small positive number)
+    const safeScale = scale > 0 ? scale : 0.1;
+
     return (
       <div className="bg-gray-900 rounded-lg overflow-hidden">
-        <div className="relative aspect-video bg-black">
-          <video
-            ref={ref}
-            className="w-full h-full object-contain"
-            style={{ display: hasVideo ? "block" : "none" }}
-            playsInline
-            muted
-          />
-          {hasImage && (
-            <img
-              src={displayMeta!.imageUrl}
-              alt={displayMeta!.label}
-              className="w-full h-full object-contain"
+        <div
+          ref={containerRef}
+          className="w-full flex items-center justify-center bg-black relative overflow-hidden"
+          style={{
+            aspectRatio: `${exportSettings.width} / ${exportSettings.height}`,
+            minHeight: 200,
+          }}
+        >
+          <div
+            style={{
+              width: exportSettings.width,
+              height: exportSettings.height,
+              transform: `scale(${safeScale})`,
+              transformOrigin: "center center",
+              position: "relative",
+              flexShrink: 0,
+            }}
+          >
+            <video
+              ref={ref}
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ display: hasVideo ? "block" : "none" }}
+              playsInline
+              muted
             />
-          )}
-          {isEmpty && (
-            <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">
-              Select a clip to preview
-            </div>
-          )}
+            {hasImage && (
+              <img
+                src={displayMeta!.imageUrl}
+                alt={displayMeta!.label}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+            )}
+            {isEmpty && (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-sm">
+                Select a clip to preview
+              </div>
+            )}
 
-          {/* CSS Text Overlays */}
-          {visibleTexts.map((overlay) => (
-            <div
-              key={overlay.id}
-              className="absolute pointer-events-none"
-              style={{
-                left: `calc(50% + ${overlay.centerX * (100 / exportSettings.width)}%)`,
-                top: `calc(50% + ${overlay.centerY * (100 / exportSettings.height)}%)`,
-                transform: "translate(-50%, -50%)",
-                fontSize: `${overlay.fontSize * (100 / exportSettings.width) * 6}vw`,
-                color: overlay.fontColor,
-                textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-                fontFamily: "Arial, sans-serif",
-                fontWeight: "bold",
-                whiteSpace: "nowrap",
-                maxWidth: "90%",
-              }}
-            >
-              {overlay.text}
-            </div>
-          ))}
+            {visibleTexts.map((overlay) => (
+              <div
+                key={overlay.id}
+                className="absolute pointer-events-none"
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  transform: `translate(calc(-50% + ${overlay.centerX}px), calc(-50% + ${overlay.centerY}px))`,
+                  fontSize: `${overlay.fontSize}px`,
+                  color: overlay.fontColor,
+                  textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: "bold",
+                  whiteSpace: "pre-wrap",
+                  textAlign: "center",
+                }}
+              >
+                {overlay.text}
+              </div>
+            ))}
+          </div>
         </div>
         {displayMeta && (
           <div className="px-3 py-2 border-t border-gray-800">

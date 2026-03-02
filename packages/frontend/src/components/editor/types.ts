@@ -6,6 +6,9 @@ export interface ClipMeta {
   imageUrl?: string;
   videoUrl?: string;
   label: string;
+  originalDuration?: number;
+  trimStart?: number;
+  trimEnd?: number;
 }
 
 export type ClipMetaMap = Record<string, ClipMeta>;

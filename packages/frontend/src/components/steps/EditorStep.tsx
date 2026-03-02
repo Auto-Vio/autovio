@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { ArrowLeft, Type, Music, Download } from "lucide-react";
+import { ArrowLeft, Type, Music, Download, Save, Loader2 } from "lucide-react";
 import { useStore, type GeneratedScene } from "../../store/useStore";
+import * as projectStorage from "../../storage/projectStorage";
 import { getAuthToken } from "../../store/useAuthStore";
+import { useToastStore } from "../../store/useToastStore";
 import { isApiMediaPath } from "../../hooks/useAuthenticatedMediaUrl";
 import type {
   TimelineRow,
@@ -15,7 +17,7 @@ import type {
   SelectedItem,
 } from "../editor/types";
 import type { TimelineEffect } from "@xzdarcy/timeline-engine";
-import type { ScenarioScene } from "@viragen/shared";
+import type { ScenarioScene, EditorStateSnapshot } from "@viragen/shared";
 import VideoPreview, { createVideoEffect } from "../editor/VideoPreview";
 import PropertiesPanel from "../editor/PropertiesPanel";
 import EditorTimeline from "../editor/EditorTimeline";
@@ -48,7 +50,6 @@ function scenesToTimelineData(
   let cursor = 0;
 
   const videoActions: TimelineAction[] = generatedScenes
-    .map((s, arrayIndex) => ({ ...s, arrayIndex }))
     .filter((s) => s.status === "done")
     .map((s) => {
       const duration =
@@ -59,10 +60,13 @@ function scenesToTimelineData(
       cursor = end;
 
       clipMeta[actionId] = {
-        sceneIndex: s.arrayIndex,
+        sceneIndex: s.sceneIndex,  // Use actual scene index, not array index
         imageUrl: s.imageUrl,
         videoUrl: s.videoUrl,
         label: `Scene ${s.sceneIndex}`,
+        originalDuration: duration,
+        trimStart: 0,
+        trimEnd: 0,
       };
 
       return {
@@ -84,20 +88,125 @@ function scenesToTimelineData(
   return { editorData, clipMeta };
 }
 
-export default function EditorStep() {
-  const { generatedScenes, scenes, setStep, currentProjectId, currentWorkId } = useStore();
+function reconstructFromSavedState(
+  saved: EditorStateSnapshot,
+  generatedScenes: GeneratedScene[],
+): { editorData: TimelineRow[]; clipMeta: ClipMetaMap; textOverlays: TextOverlayMap; exportSettings: ExportSettings } {
+  const clipMeta: ClipMetaMap = {};
+  const videoTrack = saved.editorData?.videoTrack ?? [];
+  const textTrack = saved.editorData?.textTrack ?? [];
+  const audioTrack = saved.editorData?.audioTrack ?? [];
 
-  const initial = useMemo(
+  videoTrack.forEach((a) => {
+    const scene = generatedScenes.find((s) => s.sceneIndex === (a.sceneIndex ?? 0));
+    clipMeta[a.id] = {
+      sceneIndex: a.sceneIndex ?? 0,
+      imageUrl: scene?.imageUrl,
+      videoUrl: scene?.videoUrl,
+      label: `Scene ${a.sceneIndex ?? 0}`,
+      originalDuration: (a.end - a.start) + (a.trimStart ?? 0) + (a.trimEnd ?? 0),
+      trimStart: a.trimStart ?? 0,
+      trimEnd: a.trimEnd ?? 0,
+    };
+  });
+
+  const textOverlays: TextOverlayMap = {};
+  if (saved.textOverlays) {
+    for (const [id, snap] of Object.entries(saved.textOverlays)) {
+      textOverlays[id] = {
+        id,
+        text: snap.text,
+        fontSize: snap.fontSize,
+        fontColor: snap.fontColor,
+        centerX: snap.centerX,
+        centerY: snap.centerY,
+      };
+    }
+  }
+
+  const editorData: TimelineRow[] = [
+    {
+      id: "video-track",
+      actions: videoTrack.map((a) => ({
+        id: a.id,
+        start: a.start,
+        end: a.end,
+        effectId: "videoEffect",
+        flexible: true,
+        movable: true,
+      })),
+      rowHeight: 40,
+    },
+    {
+      id: "text-track",
+      actions: textTrack.map((a) => ({
+        id: a.id,
+        start: a.start,
+        end: a.end,
+        effectId: "textEffect",
+        flexible: true,
+        movable: true,
+      })),
+      rowHeight: 40,
+    },
+    {
+      id: "audio-track",
+      actions: audioTrack.map((a) => ({
+        ...a,
+        effectId: "audioEffect",
+        flexible: true,
+        movable: true,
+      })),
+      rowHeight: 40,
+    },
+  ];
+
+  return {
+    editorData,
+    clipMeta,
+    textOverlays,
+    exportSettings: saved.exportSettings ?? { width: 1080, height: 1920, fps: 30 },
+  };
+}
+
+export default function EditorStep() {
+  const {
+    generatedScenes,
+    scenes,
+    setStep,
+    currentProjectId,
+    currentWorkId,
+    editorState: savedEditorState,
+    setEditorState,
+    saveEditorState,
+  } = useStore();
+  const addToast = useToastStore((s) => s.addToast);
+
+  const initialFromScenes = useMemo(
     () => scenesToTimelineData(generatedScenes, scenes),
     [generatedScenes, scenes],
   );
 
+  const initial = useMemo(() => {
+    if (savedEditorState?.editorData?.videoTrack?.length && generatedScenes.some((s) => s.status === "done")) {
+      return reconstructFromSavedState(savedEditorState, generatedScenes);
+    }
+    return {
+      ...initialFromScenes,
+      textOverlays: {} as TextOverlayMap,
+      exportSettings: { width: 1080, height: 1920, fps: 30 } as ExportSettings,
+    };
+  }, [savedEditorState, generatedScenes, initialFromScenes]);
+
   const [editorData, setEditorData] = useState<TimelineRow[]>(initial.editorData);
   const [clipMeta, setClipMeta] = useState<ClipMetaMap>(initial.clipMeta);
   const [resolvedUrlMap, setResolvedUrlMap] = useState<Record<string, string>>({});
-  const [textOverlays, setTextOverlays] = useState<TextOverlayMap>({});
+  const [textOverlays, setTextOverlays] = useState<TextOverlayMap>(initial.textOverlays);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioMeta, setAudioMeta] = useState<AudioMeta>({ volume: 1 });
+  const [audioUrl, setAudioUrl] = useState<string | null>(savedEditorState?.audioUrl ?? null);
+  const [audioMeta, setAudioMeta] = useState<AudioMeta>({
+    volume: savedEditorState?.audioVolume ?? 1,
+  });
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(
     initial.editorData[0]?.actions[0]
       ? { type: "clip", actionId: initial.editorData[0].actions[0].id }
@@ -105,19 +214,38 @@ export default function EditorStep() {
   );
   const [currentTime, setCurrentTime] = useState(0);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [exportSettings, setExportSettings] = useState<ExportSettings>({
-    width: 1080,
-    height: 1920,
-    fps: 30,
-  });
+  const [exportSettings, setExportSettings] = useState<ExportSettings>(initial.exportSettings);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  
+  // Track if this is the first mount or a real data change
+  const prevWorkIdRef = useRef<string | null>(null);
+  const prevScenesLengthRef = useRef<number>(0);
 
-  // Sync timeline and clipMeta when generatedScenes/scenes change (e.g. user returned from Generate with new done scenes)
+  // Sync timeline and clipMeta when work changes or new scenes arrive
   useEffect(() => {
+    const workChanged = prevWorkIdRef.current !== currentWorkId;
+    const scenesChanged = prevScenesLengthRef.current !== generatedScenes.filter(s => s.status === "done").length;
+    
+    // Only update if work changed or new completed scenes arrived
+    if (!workChanged && !scenesChanged && prevWorkIdRef.current !== null) {
+      return;
+    }
+    
+    prevWorkIdRef.current = currentWorkId;
+    prevScenesLengthRef.current = generatedScenes.filter(s => s.status === "done").length;
+
     setEditorData(initial.editorData);
     setClipMeta(initial.clipMeta);
+    setTextOverlays(initial.textOverlays);
+    setExportSettings(initial.exportSettings);
+    if (savedEditorState) {
+      setAudioUrl(savedEditorState.audioUrl ?? null);
+      setAudioMeta({ volume: savedEditorState.audioVolume });
+    }
     setResolvedUrlMap((prev) => {
       const next: Record<string, string> = {};
       const urlsInInitial = new Set<string>();
@@ -125,15 +253,23 @@ export default function EditorStep() {
         if (m.imageUrl) urlsInInitial.add(m.imageUrl);
         if (m.videoUrl) urlsInInitial.add(m.videoUrl);
       }
+      const toRevoke: string[] = [];
       for (const url of Object.keys(prev)) {
         if (urlsInInitial.has(url)) next[url] = prev[url];
-        else if (prev[url].startsWith("blob:")) URL.revokeObjectURL(prev[url]);
+        else if (prev[url].startsWith("blob:")) toRevoke.push(prev[url]);
+      }
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => {
+          toRevoke.forEach((url) => URL.revokeObjectURL(url));
+        });
+      } else {
+        toRevoke.forEach((url) => URL.revokeObjectURL(url));
       }
       return next;
     });
     const firstAction = initial.editorData.find((r) => r.id === "video-track")?.actions[0];
     setSelectedItem(firstAction ? { type: "clip", actionId: firstAction.id } : null);
-  }, [generatedScenes, scenes]);
+  }, [currentWorkId, generatedScenes, savedEditorState, initial]);
 
   // Resolve API media URLs (auth) so preview/timeline can display without 401
   useEffect(() => {
@@ -197,7 +333,104 @@ export default function EditorStep() {
 
   const handleEditorChange = useCallback((data: TimelineRow[]) => {
     setEditorData(data);
+    setIsDirty(true);
   }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!isDirty || isSaving || !currentProjectId || !currentWorkId) return;
+    try {
+      setIsSaving(true);
+      const snapshot: EditorStateSnapshot = {
+        editorData: {
+          videoTrack: editorData.find((r) => r.id === "video-track")?.actions.map((a) => {
+            const meta = clipMeta[a.id];
+            return {
+              id: a.id,
+              start: a.start,
+              end: a.end,
+              sceneIndex: meta?.sceneIndex,
+              trimStart: meta?.trimStart,
+              trimEnd: meta?.trimEnd,
+            };
+          }) ?? [],
+          textTrack: editorData.find((r) => r.id === "text-track")?.actions.map((a) => ({
+            id: a.id,
+            start: a.start,
+            end: a.end,
+          })) ?? [],
+          audioTrack: editorData.find((r) => r.id === "audio-track")?.actions.map((a) => ({
+            id: a.id,
+            start: a.start,
+            end: a.end,
+          })) ?? [],
+        },
+        textOverlays: Object.fromEntries(
+          Object.entries(textOverlays).map(([id, o]) => [
+            id,
+            { text: o.text, fontSize: o.fontSize, fontColor: o.fontColor, centerX: o.centerX, centerY: o.centerY },
+          ])
+        ),
+        audioUrl: audioUrl ?? undefined,
+        audioVolume: audioMeta.volume,
+        exportSettings,
+      };
+      setEditorState(snapshot);
+      await saveEditorState();
+      setIsDirty(false);
+      addToast("Editor state saved successfully", "success");
+    } catch (e) {
+      addToast("Failed to save editor state", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    isDirty,
+    isSaving,
+    currentProjectId,
+    currentWorkId,
+    editorData,
+    clipMeta,
+    textOverlays,
+    audioUrl,
+    audioMeta,
+    exportSettings,
+    setEditorState,
+    saveEditorState,
+    addToast,
+  ]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleSave]);
+
+  const onUpdateClipMeta = useCallback((actionId: string, partial: Partial<{ trimStart: number; trimEnd: number }>) => {
+    const meta = clipMeta[actionId];
+    const newTrimStart = partial.trimStart ?? meta?.trimStart ?? 0;
+    const newTrimEnd = partial.trimEnd ?? meta?.trimEnd ?? 0;
+    const orig = meta?.originalDuration ?? 5;
+    const newDuration = Math.max(0.5, orig - newTrimStart - newTrimEnd);
+    setClipMeta((prev) => ({ ...prev, [actionId]: { ...prev[actionId], ...partial } }));
+    setEditorData((d) =>
+      d.map((row) =>
+        row.id === "video-track"
+          ? {
+              ...row,
+              actions: row.actions.map((a) =>
+                a.id === actionId ? { ...a, end: a.start + newDuration } : a
+              ),
+            }
+          : row
+      )
+    );
+    setIsDirty(true);
+  }, [clipMeta]);
 
   const handleTimeUpdate = useCallback((time: number) => {
     setCurrentTime(time);
@@ -205,6 +438,7 @@ export default function EditorStep() {
 
   // --- Text overlay operations ---
   const addText = useCallback(() => {
+    setIsDirty(true);
     const id = `text-${++textIdCounter}`;
     const totalDuration = editorData
       .find((r) => r.id === "video-track")
@@ -255,12 +489,14 @@ export default function EditorStep() {
         ...prev,
         [id]: { ...prev[id], ...partial },
       }));
+      setIsDirty(true);
     },
     [],
   );
 
   const onDeleteTextOverlay = useCallback(
     (id: string) => {
+      setIsDirty(true);
       setTextOverlays((prev) => {
         const next = { ...prev };
         delete next[id];
@@ -282,7 +518,19 @@ export default function EditorStep() {
 
   // --- Audio operations ---
   const handleAudioChange = useCallback(
-    (file: File | null) => {
+    async (file: File | null) => {
+      if (file && currentProjectId && currentWorkId) {
+        try {
+          const url = await projectStorage.uploadWorkAudio(currentProjectId, currentWorkId, file);
+          setAudioUrl(url);
+        } catch (e) {
+          addToast("Failed to upload audio", "error");
+          return;
+        }
+      } else if (!file) {
+        setAudioUrl(null);
+      }
+      setIsDirty(true);
       setAudioFile(file);
       setEditorData((prev) => {
         if (file) {
@@ -322,11 +570,12 @@ export default function EditorStep() {
         setSelectedItem(null);
       }
     },
-    [],
+    [currentProjectId, currentWorkId, addToast],
   );
 
   const onUpdateAudioMeta = useCallback((partial: Partial<AudioMeta>) => {
     setAudioMeta((prev) => ({ ...prev, ...partial }));
+    setIsDirty(true);
   }, []);
 
   const onRemoveAudio = useCallback(() => {
@@ -358,6 +607,26 @@ export default function EditorStep() {
             className="flex items-center gap-1.5 text-xs bg-green-600/20 hover:bg-green-600/40 text-green-300 border border-green-600/40 px-3 py-1.5 rounded-lg transition-colors"
           >
             <Music size={14} /> + Audio
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!isDirty || isSaving}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${
+              isDirty
+                ? "bg-orange-500 hover:bg-orange-600 text-white"
+                : "bg-gray-600 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 size={14} className="animate-spin" /> Saving...
+              </>
+            ) : (
+              <>
+                <Save size={14} /> Save
+                {isDirty && <span className="ml-0.5 text-[10px]">●</span>}
+              </>
+            )}
           </button>
           <button
             onClick={() => setShowExportDialog(true)}
@@ -395,12 +664,14 @@ export default function EditorStep() {
             clipMeta={displayClipMeta}
             textOverlays={textOverlays}
             audioFile={audioFile}
+            audioUrl={audioUrl}
             audioMeta={audioMeta}
             editorData={editorData}
             onUpdateTextOverlay={onUpdateTextOverlay}
             onUpdateAudioMeta={onUpdateAudioMeta}
             onDeleteTextOverlay={onDeleteTextOverlay}
             onRemoveAudio={onRemoveAudio}
+            onUpdateClipMeta={onUpdateClipMeta}
           />
         </div>
       </div>
@@ -416,6 +687,13 @@ export default function EditorStep() {
         selectedItem={selectedItem}
         onSelectItem={setSelectedItem}
         onTimeUpdate={handleTimeUpdate}
+        onClipResize={(actionId, trimStart, trimEnd) => {
+          setClipMeta((prev) => ({
+            ...prev,
+            [actionId]: { ...prev[actionId], trimStart, trimEnd },
+          }));
+          setIsDirty(true);
+        }}
       />
 
       {/* Export Dialog */}
@@ -425,11 +703,16 @@ export default function EditorStep() {
           clipMeta={displayClipMeta}
           textOverlays={textOverlays}
           audioFile={audioFile}
+          audioUrl={audioUrl}
           audioMeta={audioMeta}
+          scenes={scenes}
           projectId={currentProjectId}
           workId={currentWorkId}
           settings={exportSettings}
-          onSettingsChange={setExportSettings}
+          onSettingsChange={(s) => {
+            setExportSettings(s);
+            setIsDirty(true);
+          }}
           onClose={() => setShowExportDialog(false)}
         />
       )}

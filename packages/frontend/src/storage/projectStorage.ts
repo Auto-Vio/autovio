@@ -183,6 +183,22 @@ export async function loadVideoUrl(
   return getSceneVideoUrl(projectId, workId, sceneIndex);
 }
 
+export async function uploadWorkAudio(projectId: string, workId: string, file: File): Promise<string> {
+  const form = new FormData();
+  form.append("audio", file);
+  const res = await fetch(`${API}/${projectId}/works/${workId}/media/audio`, {
+    method: "POST",
+    headers: getAuthHeader(),
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Upload failed" }));
+    throw new Error(err.error || "Failed to upload audio");
+  }
+  const data = await res.json();
+  return data.audioUrl ?? `${API}/${projectId}/works/${workId}/media/audio`;
+}
+
 export async function persistImageUrlAndGetObjectUrl(
   projectId: string,
   workId: string,

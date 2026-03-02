@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Download, Loader2, X } from "lucide-react";
 import type { TimelineRow, ClipMetaMap, TextOverlayMap, AudioMeta, ExportSettings } from "./types";
 import type { ExportRequest } from "@viragen/shared";
+import type { ScenarioScene } from "@viragen/shared";
+import { getAuthToken } from "../../store/useAuthStore";
+import { useToastStore } from "../../store/useToastStore";
 
 interface ExportDialogProps {
   editorData: TimelineRow[];
   clipMeta: ClipMetaMap;
   textOverlays: TextOverlayMap;
   audioFile: File | null;
+  audioUrl: string | null;
   audioMeta: AudioMeta;
+  scenes: ScenarioScene[];
   projectId: string | null;
   workId: string | null;
   settings: ExportSettings;
@@ -29,7 +34,9 @@ export default function ExportDialog({
   clipMeta,
   textOverlays,
   audioFile,
+  audioUrl,
   audioMeta,
+  scenes,
   projectId,
   workId,
   settings,
@@ -37,28 +44,40 @@ export default function ExportDialog({
   onClose,
 }: ExportDialogProps) {
   const [exporting, setExporting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState("Initializing...");
+  const addToast = useToastStore((s) => s.addToast);
 
   const videoTrack = editorData.find((r) => r.id === "video-track");
   const orderedActions = videoTrack
     ? [...videoTrack.actions].sort((a, b) => a.start - b.start)
     : [];
   const hasClips = orderedActions.some((a) => clipMeta[a.id]?.videoUrl);
+  const hasAudio = !!(audioFile || audioUrl);
 
   const handleExport = async () => {
     if (!hasClips || !projectId || !workId) return;
 
     setExporting(true);
+    setProgress(0);
+    setStage("Preparing...");
     try {
       const clips = orderedActions
         .filter((a) => clipMeta[a.id]?.videoUrl)
-        .map((a) => ({
-          sceneIndex: clipMeta[a.id]!.sceneIndex,
-          position: a.start,
-          end: a.end,
-          cutFrom: 0,
-        }));
+        .map((a) => {
+          const meta = clipMeta[a.id]!;
+          const scene = scenes.find((s) => s.scene_index === meta.sceneIndex);
+          const transition = scene?.transition ?? "cut";
+          return {
+            sceneIndex: meta.sceneIndex,
+            position: a.start,
+            end: a.end,
+            cutFrom: meta.trimStart ?? 0,
+            transition,
+            transitionDuration: transition === "cut" ? 0 : 0.5,
+          };
+        });
 
-      // Build text overlays from text-track actions + textOverlays metadata
       const textTrack = editorData.find((r) => r.id === "text-track");
       const texts = textTrack?.actions
         .map((a) => {
@@ -81,7 +100,7 @@ export default function ExportDialog({
         workId,
         clips,
         texts: texts && texts.length > 0 ? texts : undefined,
-        audio: audioFile ? { volume: audioMeta.volume } : undefined,
+        audio: hasAudio ? { volume: audioMeta.volume, audioUrl: audioUrl ?? undefined } : undefined,
         options: {
           width: settings.width,
           height: settings.height,
@@ -89,9 +108,14 @@ export default function ExportDialog({
         },
       };
 
+      setStage("Encoding video...");
+      const token = getAuthToken();
       const res = await fetch("/api/export", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(body),
       });
 
@@ -100,6 +124,8 @@ export default function ExportDialog({
         throw new Error(err.error || `Export failed (${res.status})`);
       }
 
+      setProgress(100);
+      setStage("Complete");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -107,12 +133,14 @@ export default function ExportDialog({
       a.download = "viragen-export.mp4";
       a.click();
       URL.revokeObjectURL(url);
+      addToast("Video exported successfully", "success");
       onClose();
     } catch (err) {
       console.error("Export failed:", err);
-      alert(`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      addToast(`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
     } finally {
       setExporting(false);
+      setProgress(0);
     }
   };
 
@@ -178,6 +206,21 @@ export default function ExportDialog({
             ))}
           </div>
         </div>
+
+        {exporting && (
+          <div className="mb-6 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">{stage}</span>
+              <span className="font-medium text-white">{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-purple-500 h-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3">

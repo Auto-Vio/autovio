@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { WorkSnapshot, AnalysisResult, ScenarioScene, GeneratedSceneSnapshot, PipelineStep } from "@viragen/shared";
+import type { WorkSnapshot, AnalysisResult, ScenarioScene, GeneratedSceneSnapshot, PipelineStep, EditorStateSnapshot } from "@viragen/shared";
 
 export interface WorkDocument {
   _id: string;
@@ -23,6 +23,7 @@ export interface WorkDocument {
   analysis: AnalysisResult | null;
   scenes: ScenarioScene[];
   generatedScenes: GeneratedSceneSnapshot[];
+  editorState?: EditorStateSnapshot;
 }
 
 const SceneAnalysisSchema = new Schema(
@@ -77,6 +78,48 @@ const GeneratedSceneSnapshotSchema = new Schema(
   { _id: false }
 );
 
+const TimelineActionSnapshotSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    start: { type: Number, required: true },
+    end: { type: Number, required: true },
+    sceneIndex: { type: Number },
+    trimStart: { type: Number },
+    trimEnd: { type: Number },
+  },
+  { _id: false }
+);
+
+const TextOverlaySnapshotSchema = new Schema(
+  {
+    text: { type: String, default: "" },
+    fontSize: { type: Number, default: 32 },
+    fontColor: { type: String, default: "#ffffff" },
+    centerX: { type: Number, default: 0 },
+    centerY: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+const EditorStateSnapshotSchema = new Schema(
+  {
+    editorData: {
+      videoTrack: [TimelineActionSnapshotSchema],
+      textTrack: [TimelineActionSnapshotSchema],
+      audioTrack: [TimelineActionSnapshotSchema],
+    },
+    textOverlays: { type: Schema.Types.Mixed, default: {} },
+    audioUrl: { type: String },
+    audioVolume: { type: Number, default: 1 },
+    exportSettings: {
+      width: { type: Number, default: 1080 },
+      height: { type: Number, default: 1920 },
+      fps: { type: Number, default: 30 },
+    },
+  },
+  { _id: false }
+);
+
 const WorkSchema = new Schema(
   {
     _id: { type: String, required: true },
@@ -100,6 +143,7 @@ const WorkSchema = new Schema(
     analysis: { type: AnalysisResultSchema, default: null },
     scenes: [ScenarioSceneSchema],
     generatedScenes: [GeneratedSceneSnapshotSchema],
+    editorState: { type: EditorStateSnapshotSchema },
   },
   {
     _id: false,
@@ -134,5 +178,6 @@ export function toWorkSnapshot(doc: WorkDocument): WorkSnapshot {
     analysis: doc.analysis as AnalysisResult | null,
     scenes: doc.scenes as ScenarioScene[],
     generatedScenes: doc.generatedScenes as GeneratedSceneSnapshot[],
+    editorState: doc.editorState as EditorStateSnapshot | undefined,
   };
 }

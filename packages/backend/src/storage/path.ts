@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs/promises";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,6 +27,26 @@ export function workJsonPath(projectId: string, workId: string): string {
 
 export function referenceVideoPath(projectId: string, workId: string): string {
   return path.join(workDir(projectId, workId), "reference.mp4");
+}
+
+const AUDIO_EXTS = ["mp3", "m4a", "wav", "ogg", "webm"];
+
+export function workAudioPath(projectId: string, workId: string, ext = "mp3"): string {
+  return path.join(workDir(projectId, workId), `audio.${ext}`);
+}
+
+export async function resolveWorkAudioPath(projectId: string, workId: string): Promise<string | null> {
+  const dir = workDir(projectId, workId);
+  for (const ext of AUDIO_EXTS) {
+    const p = path.join(dir, `audio.${ext}`);
+    try {
+      await fs.access(p);
+      return p;
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 const MIME_EXT: Record<string, string> = {

@@ -13,12 +13,14 @@ interface PropertiesPanelProps {
   clipMeta: ClipMetaMap;
   textOverlays: TextOverlayMap;
   audioFile: File | null;
+  audioUrl: string | null;
   audioMeta: AudioMeta;
   editorData: TimelineRow[];
   onUpdateTextOverlay: (id: string, partial: Partial<TextOverlay>) => void;
   onUpdateAudioMeta: (meta: Partial<AudioMeta>) => void;
   onDeleteTextOverlay: (id: string) => void;
   onRemoveAudio: () => void;
+  onUpdateClipMeta?: (actionId: string, partial: Partial<{ trimStart: number; trimEnd: number }>) => void;
 }
 
 export default function PropertiesPanel({
@@ -26,12 +28,14 @@ export default function PropertiesPanel({
   clipMeta,
   textOverlays,
   audioFile,
+  audioUrl,
   audioMeta,
   editorData,
   onUpdateTextOverlay,
   onUpdateAudioMeta,
   onDeleteTextOverlay,
   onRemoveAudio,
+  onUpdateClipMeta,
 }: PropertiesPanelProps) {
   if (!selectedItem) {
     return (
@@ -46,6 +50,9 @@ export default function PropertiesPanel({
     const videoTrack = editorData.find((r) => r.id === "video-track");
     const action = videoTrack?.actions.find((a) => a.id === selectedItem.actionId);
     const duration = action ? (action.end - action.start).toFixed(1) : "—";
+    const origDur = meta?.originalDuration ?? 5;
+    const trimStart = meta?.trimStart ?? 0;
+    const trimEnd = meta?.trimEnd ?? 0;
 
     return (
       <div className="bg-gray-900 rounded-lg p-4 space-y-3">
@@ -62,9 +69,46 @@ export default function PropertiesPanel({
             )}
             <div className="text-xs text-gray-400 space-y-1">
               <p>Scene: {meta.sceneIndex}</p>
-              <p>Duration: {duration}s</p>
+              <p>Duration: {duration}s / {origDur.toFixed(1)}s</p>
               <p>Type: {meta.videoUrl ? "Video" : "Image"}</p>
             </div>
+            {onUpdateClipMeta && meta.videoUrl && (
+              <div className="space-y-2 pt-2 border-t border-gray-800">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Trim</p>
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Trim start (s)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={Math.max(0, origDur - trimEnd - 0.5)}
+                    step={0.1}
+                    value={trimStart.toFixed(1)}
+                    onChange={(e) =>
+                      onUpdateClipMeta(selectedItem.actionId, {
+                        trimStart: Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Trim end (s)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={Math.max(0, origDur - trimStart - 0.5)}
+                    step={0.1}
+                    value={trimEnd.toFixed(1)}
+                    onChange={(e) =>
+                      onUpdateClipMeta(selectedItem.actionId, {
+                        trimEnd: Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200"
+                  />
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-gray-400">Clip not found</p>
@@ -175,9 +219,9 @@ export default function PropertiesPanel({
       <div className="bg-gray-900 rounded-lg p-4 space-y-3">
         <p className="text-xs text-gray-500 uppercase tracking-wider">Audio Properties</p>
 
-        {audioFile ? (
+        {(audioFile || audioUrl) ? (
           <>
-            <p className="text-sm text-gray-200 truncate">{audioFile.name}</p>
+            <p className="text-sm text-gray-200 truncate">{audioFile?.name ?? "Audio file"}</p>
 
             <div>
               <label className="text-xs text-gray-400 block mb-1">

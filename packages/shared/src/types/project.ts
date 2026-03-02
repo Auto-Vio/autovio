@@ -113,6 +113,40 @@ export interface ProjectMeta {
   updatedAt: number;
 }
 
+/** Editor'da kaydedilen timeline/overlay/audio state (sayfa yenilense bile geri yüklenir). */
+export interface TimelineActionSnapshot {
+  id: string;
+  start: number;
+  end: number;
+  sceneIndex?: number;
+  trimStart?: number;
+  trimEnd?: number;
+}
+
+export interface TextOverlaySnapshot {
+  text: string;
+  fontSize: number;
+  fontColor: string;
+  centerX: number;
+  centerY: number;
+}
+
+export interface EditorStateSnapshot {
+  editorData: {
+    videoTrack: TimelineActionSnapshot[];
+    textTrack: TimelineActionSnapshot[];
+    audioTrack: TimelineActionSnapshot[];
+  };
+  textOverlays: Record<string, TextOverlaySnapshot>;
+  audioUrl?: string;
+  audioVolume: number;
+  exportSettings: {
+    width: number;
+    height: number;
+    fps: number;
+  };
+}
+
 /** Çalışma: bir proje altında tek bir pipeline; tüm agent promptları projeden kopyalanır, çalışmada güncellenebilir. */
 export interface WorkSnapshot {
   id: string;
@@ -142,6 +176,9 @@ export interface WorkSnapshot {
   analysis: AnalysisResult | null;
   scenes: ScenarioScene[];
   generatedScenes: GeneratedSceneSnapshot[];
+
+  /** Editor state: timeline, text overlays, audio, export settings. */
+  editorState?: EditorStateSnapshot;
 }
 
 /** Çalışma listesi için meta. */

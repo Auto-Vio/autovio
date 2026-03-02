@@ -10,6 +10,8 @@ import {
   sceneVideoBasePath,
   sceneImageReadExtensions,
   sceneVideoReadExtensions,
+  workAudioPath,
+  resolveWorkAudioPath,
 } from "./path.js";
 import { getProject } from "./projects.js";
 import { WorkModel, toWorkSnapshot } from "../db/index.js";
@@ -63,6 +65,7 @@ export async function saveWork(projectId: string, snapshot: WorkSnapshot): Promi
       analysis: snapshot.analysis,
       scenes: snapshot.scenes,
       generatedScenes: snapshot.generatedScenes,
+      editorState: snapshot.editorState,
     },
     { upsert: true, new: true }
   );
@@ -121,6 +124,14 @@ export function getSceneImagePath(projectId: string, workId: string, index: numb
 
 export function getSceneVideoPath(projectId: string, workId: string, index: number, mime?: string): string {
   return sceneVideoPath(projectId, workId, index, mime);
+}
+
+export function getWorkAudioPath(projectId: string, workId: string, ext?: string): string {
+  return workAudioPath(projectId, workId, ext);
+}
+
+export async function getResolvedWorkAudioPath(projectId: string, workId: string): Promise<string | null> {
+  return resolveWorkAudioPath(projectId, workId);
 }
 
 export async function workExists(projectId: string, workId: string): Promise<boolean> {

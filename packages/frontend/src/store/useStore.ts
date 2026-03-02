@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AnalysisResult, ScenarioScene, ProviderConfig, StyleGuide } from "@viragen/shared";
 import { getProviderConfig, generateImage as apiGenerateImage, generateVideo as apiGenerateVideo } from "../api/client";
-import type { WorkSnapshot } from "@viragen/shared";
+import type { WorkSnapshot, EditorStateSnapshot } from "@viragen/shared";
 import * as projectStorage from "../storage/projectStorage";
 
 export type PipelineStep = 0 | 1 | 2 | 3 | 4;
@@ -39,6 +39,9 @@ interface AppState {
   createNewProject: (name?: string) => Promise<void>;
   createNewWork: (projectId: string, name?: string) => Promise<void>;
   persistCurrentWork: () => Promise<void>;
+  editorState: EditorStateSnapshot | undefined;
+  setEditorState: (state: EditorStateSnapshot | undefined) => void;
+  saveEditorState: () => Promise<void>;
   setProjectKnowledge: (knowledge: string) => void;
   setWorkSystemPrompt: (prompt: string) => void;
   setWorkAnalyzerPrompt: (prompt: string) => void;
@@ -155,6 +158,7 @@ const initialState = {
   scenarioLoading: false,
   scenarioError: null as string | null,
   generatedScenes: [] as GeneratedScene[],
+  editorState: undefined as EditorStateSnapshot | undefined,
   showSettings: false,
   providerConfig: getProviderConfig(),
 };
@@ -179,6 +183,7 @@ type PersistableState = Pick<
   | "analysis"
   | "scenes"
   | "generatedScenes"
+  | "editorState"
 >;
 
 function buildWorkSnapshot(
@@ -215,6 +220,7 @@ function buildWorkSnapshot(
       status,
       error,
     })),
+    editorState: state.editorState,
   };
 }
 
@@ -261,6 +267,27 @@ export const useStore = create<AppState>((set, get) => ({
       providerConfig: get().providerConfig,
     }),
 
+  setEditorState: (editorState) => set({ editorState }),
+  saveEditorState: async () => {
+    const state = get();
+    if (!state.currentProjectId || !state.currentWorkId || state.loadingProject) return;
+    try {
+      const work = await projectStorage.getWork(state.currentProjectId, state.currentWorkId);
+      if (!work) return;
+      const snap = buildWorkSnapshot(
+        state,
+        state.currentProjectId,
+        state.currentWorkId,
+        work.name,
+        work.createdAt
+      );
+      await projectStorage.saveWork(state.currentProjectId, snap);
+    } catch (e) {
+      console.error("Failed to save editor state", e);
+      throw e;
+    }
+  },
+
   loadWork: async (projectId, workId) => {
     const work = await projectStorage.getWork(projectId, workId);
     if (!work) return;
@@ -291,6 +318,7 @@ export const useStore = create<AppState>((set, get) => ({
       analysis: work.analysis,
       scenes: work.scenes,
       generatedScenes: work.generatedScenes.map((s) => ({ ...s })),
+      editorState: work.editorState,
       videoFile: null,
       analysisLoading: false,
       analysisError: null,

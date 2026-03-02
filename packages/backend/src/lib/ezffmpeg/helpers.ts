@@ -3,7 +3,14 @@ import type { InternalVideoClip, InternalAudioClip } from "./types.js";
 type TrimmableClip = InternalVideoClip | InternalAudioClip;
 
 export function getTrimEnd(clip: TrimmableClip): number {
-  return clip.cutFrom + (clip.end - clip.position);
+  const requestedEnd = clip.cutFrom + (clip.end - clip.position);
+  
+  // For video clips, don't exceed the actual source duration
+  if (clip.type === "video" && clip.sourceDuration != null) {
+    return Math.min(requestedEnd, clip.sourceDuration);
+  }
+  
+  return requestedEnd;
 }
 
 export function getClipAudioString(

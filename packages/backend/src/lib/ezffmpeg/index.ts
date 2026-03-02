@@ -14,6 +14,8 @@ import type {
   EZFFMPEGOptions,
   ResolvedOptions,
   ClipObj,
+  VideoClipObj,
+  AudioClipObj,
   ExportParams,
   InternalVideoClip,
   InternalAudioClip,
@@ -63,6 +65,7 @@ export class EZFFMPEG {
       const { stdout } = await execFileAsync("ffprobe", [
         "-v", "error",
         "-show_streams",
+        "-show_format",
         "-of", "json",
         url,
       ]);
@@ -75,15 +78,25 @@ export class EZFFMPEG {
       );
       const iphoneRotation =
         videoStream?.side_data_list?.[0]?.rotation ?? 0;
+      
+      // Get duration from format or video stream
+      let duration: number | null = null;
+      if (metadata.format?.duration) {
+        duration = parseFloat(metadata.format.duration);
+      } else if (videoStream?.duration) {
+        duration = parseFloat(videoStream.duration);
+      }
+      
       return {
         iphoneRotation,
         hasAudio: !!hasAudio,
         width: videoStream?.width ?? null,
         height: videoStream?.height ?? null,
+        duration,
       };
     } catch (err) {
       this.log("Error getting video metadata:", err);
-      return { iphoneRotation: 0, hasAudio: false, width: null, height: null };
+      return { iphoneRotation: 0, hasAudio: false, width: null, height: null, duration: null };
     }
   }
 
@@ -105,7 +118,7 @@ export class EZFFMPEG {
     this.filesToClean = [];
   }
 
-  private async loadVideo(clipObj: ClipObj & { type: "video" }): Promise<void> {
+  private async loadVideo(clipObj: VideoClipObj): Promise<void> {
     const metadata = await this.getVideoMetadata(clipObj.url);
     this.videoOrAudioClips.push({
       ...clipObj,
@@ -113,10 +126,13 @@ export class EZFFMPEG {
       cutFrom: clipObj.cutFrom ?? 0,
       iphoneRotation: metadata.iphoneRotation,
       hasAudio: metadata.hasAudio,
+      transition: clipObj.transition,
+      transitionDuration: clipObj.transitionDuration,
+      sourceDuration: metadata.duration,
     });
   }
 
-  private loadAudio(clipObj: ClipObj & { type: "audio" }): void {
+  private loadAudio(clipObj: AudioClipObj): void {
     this.videoOrAudioClips.push({
       ...clipObj,
       volume: clipObj.volume ?? 1,
@@ -162,8 +178,11 @@ export class EZFFMPEG {
   async export(params: ExportParams = {}): Promise<string> {
     const outputPath = params.outputPath ?? "./output.mp4";
 
-    // 1. Sort clips by position
-    this.videoOrAudioClips.sort((a, b) => {
+    // 1. Separate video and audio clips, then sort videos by position
+    const videoClips = this.videoOrAudioClips.filter((c) => c.type === "video") as InternalVideoClip[];
+    const audioClips = this.videoOrAudioClips.filter((c) => c.type === "audio") as InternalAudioClip[];
+    
+    videoClips.sort((a, b) => {
       if (a.position == null) return -1;
       if (b.position == null) return 1;
       return a.position - b.position;
@@ -171,8 +190,8 @@ export class EZFFMPEG {
 
     // 2. Un-rotate any iPhone-rotated videos
     await Promise.all(
-      this.videoOrAudioClips.map(async (clip) => {
-        if (clip.type === "video" && clip.iphoneRotation !== 0) {
+      videoClips.map(async (clip) => {
+        if (clip.iphoneRotation !== 0) {
           const unrotatedUrl = await this.unrotateVideo(clip.url);
           this.filesToClean.push(unrotatedUrl);
           clip.url = unrotatedUrl;
@@ -180,24 +199,69 @@ export class EZFFMPEG {
       }),
     );
 
+    // Build ordered input list: videos first, then audio files
+    const orderedInputs: InternalClip[] = [...videoClips, ...audioClips];
+
     let filterComplex = "";
     let videoString = "";
     let audioString = "";
     let textString = "";
     const videoConcatInputs: string[] = [];
+    const videoSegmentInfos: { label: string; clip: InternalVideoClip; duration: number }[] = [];
     const audioConcatInputs: string[] = [];
     let blackConcatCount = 0;
     let currentPosition = 0;
 
-    // 3. Build filter_complex for each clip
-    this.videoOrAudioClips.forEach((clip, index) => {
-      if (clip.type === "video") {
-        const videoClip = clip as InternalVideoClip;
+    // 3. Build filter_complex for video clips
+    videoClips.forEach((videoClip, videoIndex) => {
+      const segDuration = videoClip.end - videoClip.position;
 
-        // Fill gap before this clip with black
-        if (videoClip.position > currentPosition) {
+      // Fill gap before this clip with black
+      if (videoClip.position > currentPosition) {
+        const { blackStringPart, blackConcatInput } = getBlackString(
+          videoClip.position - currentPosition,
+          this.options.width,
+          this.options.height,
+          blackConcatCount,
+        );
+        videoString += blackStringPart;
+        videoConcatInputs.push(blackConcatInput);
+        blackConcatCount++;
+      }
+
+      // Trim + scale + pad - use videoIndex as FFmpeg input index
+      const trimEnd = getTrimEnd(videoClip);
+      this.log(`Video ${videoIndex}: url=${videoClip.url}, cutFrom=${videoClip.cutFrom}, trimEnd=${trimEnd}, sourceDuration=${videoClip.sourceDuration}, position=${videoClip.position}, end=${videoClip.end}, segDuration=${segDuration}`);
+      
+      videoString +=
+        `[${videoIndex}:v]trim=start=${videoClip.cutFrom}:end=${trimEnd},` +
+        `setpts=PTS-STARTPTS,` +
+        `fps=${this.options.fps},` +
+        `scale=${this.options.width}:${this.options.height}:force_original_aspect_ratio=decrease,` +
+        `pad=${this.options.width}:${this.options.height}:(ow-iw)/2:(oh-ih)/2[v${videoIndex}];`;
+      videoConcatInputs.push(`[v${videoIndex}]`);
+      videoSegmentInfos.push({ label: `[v${videoIndex}]`, clip: videoClip, duration: segDuration });
+
+      if (videoClip.hasAudio) {
+        const { audioStringPart, audioConcatInput } = getClipAudioString(
+          videoClip,
+          videoIndex,
+        );
+        audioString += audioStringPart;
+        audioConcatInputs.push(audioConcatInput);
+      }
+
+      currentPosition = videoClip.end;
+
+      // Fill trailing gap after last video clip
+      if (videoIndex === videoClips.length - 1) {
+        const maxEnd = Math.max(
+          ...videoClips.map((c) => c.end),
+          ...this.textClips.map((c) => c.end),
+        );
+        if (currentPosition < maxEnd) {
           const { blackStringPart, blackConcatInput } = getBlackString(
-            videoClip.position - currentPosition,
+            maxEnd - currentPosition,
             this.options.width,
             this.options.height,
             blackConcatCount,
@@ -205,67 +269,77 @@ export class EZFFMPEG {
           videoString += blackStringPart;
           videoConcatInputs.push(blackConcatInput);
           blackConcatCount++;
+          currentPosition = maxEnd;
         }
-
-        // Trim + scale + pad
-        videoString +=
-          `[${index}:v]trim=start=${videoClip.cutFrom}:end=${getTrimEnd(videoClip)},` +
-          `setpts=PTS-STARTPTS,` +
-          `scale=${this.options.width}:${this.options.height}:force_original_aspect_ratio=decrease,` +
-          `pad=${this.options.width}:${this.options.height}:(ow-iw)/2:(oh-ih)/2[v${index}];`;
-        videoConcatInputs.push(`[v${index}]`);
-
-        if (videoClip.hasAudio) {
-          const { audioStringPart, audioConcatInput } = getClipAudioString(
-            videoClip,
-            index,
-          );
-          audioString += audioStringPart;
-          audioConcatInputs.push(audioConcatInput);
-        }
-
-        currentPosition = videoClip.end;
-
-        // Fill trailing gap after last clip
-        if (index === this.videoOrAudioClips.length - 1) {
-          const maxEnd = Math.max(
-            ...this.videoOrAudioClips.map((c) => c.end),
-            ...this.textClips.map((c) => c.end),
-          );
-          if (currentPosition < maxEnd) {
-            const { blackStringPart, blackConcatInput } = getBlackString(
-              maxEnd - currentPosition,
-              this.options.width,
-              this.options.height,
-              blackConcatCount,
-            );
-            videoString += blackStringPart;
-            videoConcatInputs.push(blackConcatInput);
-            blackConcatCount++;
-            currentPosition = maxEnd;
-          }
-        }
-      }
-
-      if (clip.type === "audio") {
-        const audioClip = clip as InternalAudioClip;
-        const { audioStringPart, audioConcatInput } = getClipAudioString(
-          audioClip,
-          index,
-        );
-        audioString += audioStringPart;
-        audioConcatInputs.push(audioConcatInput);
       }
     });
+
+    // 4. Build filter_complex for audio clips (external audio files)
+    audioClips.forEach((audioClip, audioIndex) => {
+      // Audio input index starts after all video inputs
+      const ffmpegInputIndex = videoClips.length + audioIndex;
+      const { audioStringPart, audioConcatInput } = getClipAudioString(
+        audioClip,
+        ffmpegInputIndex,
+      );
+      audioString += audioStringPart;
+      audioConcatInputs.push(audioConcatInput);
+    });
+
+    // Store ordered inputs for later use
+    this.videoOrAudioClips = orderedInputs;
 
     filterComplex += videoString + audioString;
 
     let combinedVideoName = "[outv]";
 
-    // 4. Concat all video segments
+    // 4. Concat or xfade video segments
+    // Only use xfade if there are actual transitions (not "cut" and duration > 0)
+    const hasRealTransitions = videoSegmentInfos.some(
+      (s) => s.clip.transition && s.clip.transition !== "cut" && (s.clip.transitionDuration ?? 0) > 0
+    );
+    const xfadeMap: Record<string, string> = {
+      fade: "fade",
+      dissolve: "dissolve",
+      wipeleft: "wipeleft",
+      wiperight: "wiperight",
+      slideup: "slideup",
+      slidedown: "slidedown",
+    };
+
     if (videoConcatInputs.length > 0) {
-      filterComplex += videoConcatInputs.join("");
-      filterComplex += `concat=n=${videoConcatInputs.length}:v=1:a=0${combinedVideoName};`;
+      if (hasRealTransitions && videoSegmentInfos.length >= 2) {
+        // Use xfade for transitions
+        let accLabel = videoSegmentInfos[0].label;
+        let accDuration = videoSegmentInfos[0].duration;
+        for (let i = 1; i < videoSegmentInfos.length; i++) {
+          const seg = videoSegmentInfos[i];
+          const prev = videoSegmentInfos[i - 1];
+          const trans = prev.clip.transition ?? "cut";
+          const dur = prev.clip.transitionDuration ?? 0.5;
+          
+          // Skip xfade for "cut" or zero duration - will be handled by concat
+          if (trans === "cut" || dur <= 0) {
+            // For cut transitions within xfade chain, we need to concat
+            const outLabel = i === videoSegmentInfos.length - 1 ? "outv" : `concat${i}`;
+            filterComplex += `${accLabel}${seg.label}concat=n=2:v=1:a=0[${outLabel}];`;
+            accLabel = `[${outLabel}]`;
+            accDuration = accDuration + seg.duration;
+          } else {
+            const xfadeType = xfadeMap[trans] ?? "fade";
+            const offset = Math.max(0, accDuration - dur);
+            const outLabel = i === videoSegmentInfos.length - 1 ? "outv" : `xfade${i}`;
+            filterComplex += `${accLabel}${seg.label}xfade=transition=${xfadeType}:duration=${dur}:offset=${offset}[${outLabel}];`;
+            accLabel = `[${outLabel}]`;
+            accDuration = accDuration + seg.duration - dur;
+          }
+        }
+        combinedVideoName = videoSegmentInfos.length === 1 ? videoSegmentInfos[0].label : "[outv]";
+      } else {
+        // No transitions - use simple concat
+        filterComplex += videoConcatInputs.join("");
+        filterComplex += `concat=n=${videoConcatInputs.length}:v=1:a=0${combinedVideoName};`;
+      }
     }
 
     // 5. Mix audio
@@ -353,6 +427,7 @@ export class EZFFMPEG {
     args.push(outputPath);
 
     this.log("ezffmpeg: Export started");
+    this.log("filter_complex:", filterComplex);
     this.log("ffmpeg args:", args.join(" "));
 
     try {

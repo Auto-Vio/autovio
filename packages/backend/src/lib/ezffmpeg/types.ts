@@ -17,6 +17,8 @@ export interface VideoClipObj {
   end: number;
   cutFrom?: number;
   volume?: number;
+  transition?: string;
+  transitionDuration?: number;
 }
 
 export interface AudioClipObj {
@@ -57,6 +59,10 @@ export interface InternalVideoClip extends VideoClipObj {
   cutFrom: number;
   iphoneRotation: number;
   hasAudio: boolean;
+  transition?: string;
+  transitionDuration?: number;
+  /** Actual duration of the source video file in seconds */
+  sourceDuration: number | null;
 }
 
 export interface InternalAudioClip extends AudioClipObj {
@@ -90,6 +96,7 @@ export type InternalClip = InternalVideoClip | InternalAudioClip;
 
 export interface ExportParams {
   outputPath?: string;
+  onProgress?: (progress: number, stage: string) => void;
 }
 
 export interface VideoMetadata {
@@ -97,6 +104,7 @@ export interface VideoMetadata {
   hasAudio: boolean;
   width: number | null;
   height: number | null;
+  duration: number | null;
 }
 
 export type Logger = (message: string, ...args: unknown[]) => void;

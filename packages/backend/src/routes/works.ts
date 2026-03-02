@@ -13,6 +13,8 @@ import {
   getReferenceVideoPath,
   getSceneImagePath,
   getSceneVideoPath,
+  getWorkAudioPath,
+  getResolvedWorkAudioPath,
   resolveSceneImagePath,
   resolveSceneVideoPath,
 } from "../storage/works.js";
@@ -308,6 +310,67 @@ router.get("/:workId/media/scene/:index/video", requireScope("works:read"), asyn
     }
     const ext = path.extname(filePath).toLowerCase();
     const mime = ext === ".mp4" ? "video/mp4" : ext === ".webm" ? "video/webm" : "application/octet-stream";
+    res.sendFile(path.resolve(filePath), { headers: { "Content-Type": mime } }, (err) => {
+      if (err) next(err);
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+const AUDIO_MIME_EXT: Record<string, string> = {
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/wav": "wav",
+  "audio/ogg": "ogg",
+  "audio/webm": "webm",
+};
+
+router.post("/:workId/media/audio", requireScope("works:write"), upload.single("audio"), async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const projectId = getProjectId(req);
+    const workId = getWorkId(req);
+    if (!(await projectExists(projectId, userId))) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+    if (!(await workExists(projectId, workId))) {
+      res.status(404).json({ error: "Work not found" });
+      return;
+    }
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "No audio file" });
+      return;
+    }
+    const ext = AUDIO_MIME_EXT[file.mimetype] ?? "mp3";
+    const dest = getWorkAudioPath(projectId, workId, ext);
+    await fs.mkdir(path.dirname(dest), { recursive: true });
+    await fs.writeFile(dest, file.buffer);
+    const audioUrl = `/api/projects/${projectId}/works/${workId}/media/audio`;
+    res.json({ ok: true, audioUrl });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get("/:workId/media/audio", requireScope("works:read"), async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const projectId = getProjectId(req);
+    const workId = getWorkId(req);
+    if (!(await projectExists(projectId, userId))) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+    const filePath = await getResolvedWorkAudioPath(projectId, workId);
+    if (!filePath) {
+      res.status(404).json({ error: "Audio not found" });
+      return;
+    }
+    const ext = path.extname(filePath).toLowerCase().slice(1);
+    const mime = ext === "mp3" ? "audio/mpeg" : ext === "m4a" ? "audio/mp4" : ext === "wav" ? "audio/wav" : ext === "ogg" ? "audio/ogg" : "audio/webm";
     res.sendFile(path.resolve(filePath), { headers: { "Content-Type": mime } }, (err) => {
       if (err) next(err);
     });
