@@ -382,10 +382,10 @@ ViraGen implements a 5-step video generation workflow. Each step builds upon the
 
 **Capabilities**:
 - Drag and drop clips on timeline
-- Trim and adjust clip positions
-- Add text overlays with timing
-- Preview assembled video
-- Export final MP4
+- Trim and adjust clip positions (per-clip trim start/end)
+- Add text overlays with timing and styling
+- Preview assembled video in export resolution
+- Export final MP4 with transitions and audio
 
 **Data Flow**:
 - Frontend: `EditorStep.tsx` component, timeline editor components
@@ -395,11 +395,20 @@ ViraGen implements a 5-step video generation workflow. Each step builds upon the
 **Editor-specific behavior**:
 - **Auth-resolved media**: Clip image/video URLs that point to own API (`/api/.../media/...`) are resolved in EditorStep (fetch with JWT, create blob URLs) so preview and timeline thumbnails work without 401. Resolved URLs are passed as `displayClipMeta` to VideoPreview, PropertiesPanel, EditorTimeline, ExportDialog.
 - **State sync**: When `generatedScenes` or `scenes` change (e.g. user returns from Generate with new completed scenes), editor timeline and clip meta are updated from store so the timeline reflects the latest done scenes.
+- **Pixel-accurate preview**: `VideoPreview` renders into a fixed-size container that matches export resolution (`ExportSettings.width/height`) and scales with a CSS transform. Text overlays use pixel-based font size and center-relative coordinates so preview and FFmpeg output match visually.
+- **Editor state persistence**: Timeline rows, clip metadata (including trim values), text overlays, audio URL/volume and export settings are serialized into `EditorStateSnapshot` and stored on the `Work` document (`WorkSnapshot.editorState`). On load, EditorStep reconstructs the timeline from this snapshot so a page refresh does not lose edits.
+- **Manual save & dirty tracking**: Editor shows a `Save` button (and supports ⌘/Ctrl+S) that persists the current `editorState` via `useStore.saveEditorState()`. Any timeline/text/audio/export change marks the editor as dirty until saved.
+- **Audio track from server**: When the user adds an audio file, the frontend uploads it to `/api/projects/:projectId/works/:workId/media/audio`. Only the persisted server URL is kept in `editorState`; the raw `File` object lives in memory for the current session.
 
 **Export Request**:
 - projectId, workId: Identifiers
-- clips: Array of clip configurations (scene index, position, duration, trim points)
-- texts: Array of text overlays (content, position, styling)
+- clips: Array of clip configurations
+  - `sceneIndex`: Scenario scene index
+  - `position`, `end`: Timeline position in seconds
+  - `cutFrom`: Per-clip trim start (seconds)
+  - `transition`, `transitionDuration`: Optional scene transition metadata (e.g. `fade`, `dissolve`, `wipeleft`, `slideup`)
+- texts: Array of text overlays (content, timing, styling, position)
+- audio: Optional audio config `{ volume, audioUrl }` (audio file already persisted under the work’s media)
 - options: Output settings (width, height, fps)
 
 **Output**: MP4 video file download
@@ -415,8 +424,40 @@ All pipeline state is continuously saved to the Work document in MongoDB:
 - analysis: AnalysisResult from Step 1
 - scenes: ScenarioScene array from Step 2
 - generatedScenes: GeneratedSceneSnapshot array from Step 3
+- editorState: Optional `EditorStateSnapshot` from EditorStep (timeline, text overlays, audio, export settings)
 
 This enables users to pause and resume work at any point.
+
+---
+
+### Export Pipeline Details (EZFFMPEG)
+
+The export pipeline is implemented by the `EZFFMPEG` wrapper in the backend. It converts the `ExportRequest` payload coming from EditorStep into a single MP4:
+
+- **Inputs**:
+  - Per-scene video clips resolved from `works` storage (`resolveSceneVideoPath`)
+  - Optional project/work-level audio track (`getResolvedWorkAudioPath`)
+  - Text overlays from `texts` array
+  - Export options (width, height, fps)
+- **Pre-processing**:
+  - Uses `ffprobe` to detect iPhone rotation and auto-unrotates videos when needed
+  - Trims each video according to `cutFrom` and the clip’s end time
+  - Scales to target resolution with `force_original_aspect_ratio=decrease` and pads to center
+- **Transitions**:
+  - Builds a chain of segments and applies FFmpeg `xfade` where `transition` is not `cut`
+  - Supported transitions (mapped from scenario `transition`): `fade`, `dissolve`, `wipeleft`, `wiperight`, `slideup`, `slidedown`
+  - For `cut`, segments are concatenated without cross-fade; for others, a configurable `transitionDuration` is applied
+- **Audio mixing**:
+  - If original clips contain audio, `getClipAudioString` mixes them
+  - If a separate work-level audio file exists, it is added as an `audio` clip spanning the full timeline and mixed via `amix`
+- **Text overlays**:
+  - Each text overlay becomes a `drawtext` filter with:
+    - `enable='between(t,start,end)'` for timing
+    - Center-relative or absolute positioning
+    - Optional border, shadow and background box
+- **Progress reporting (internal)**:
+  - `ExportParams` supports an optional `onProgress(progress, stage)` callback
+  - The router wraps `EZFFMPEG.export` and can propagate progress to the caller (UI currently shows a generic progress bar tied to the HTTP request lifecycle)
 
 ---
 
