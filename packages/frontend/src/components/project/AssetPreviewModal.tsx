@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import type { ProjectAsset } from "@viragen/shared";
+import type { ProjectAsset } from "@autovio/shared";
 import { getProjectAssetUrl } from "../../storage/projectStorage";
 import { getAuthToken } from "../../store/useAuthStore";
 

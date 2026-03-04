@@ -1,6 +1,6 @@
 import fs from "fs/promises";
-import type { WorkMeta, WorkSnapshot } from "@viragen/shared";
-import { DEFAULT_IMAGE_INSTRUCTION, DEFAULT_VIDEO_INSTRUCTION } from "@viragen/shared";
+import type { WorkMeta, WorkSnapshot } from "@autovio/shared";
+import { DEFAULT_IMAGE_INSTRUCTION, DEFAULT_VIDEO_INSTRUCTION } from "@autovio/shared";
 import {
   workDir,
   referenceVideoPath,

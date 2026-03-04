@@ -1,4 +1,4 @@
-# ViraGen
+# AutoVio
 
 Monorepo: backend (Express) + frontend (React/Vite).
 

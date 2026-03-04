@@ -14,8 +14,8 @@ import {
   workDir,
   workJsonPath,
 } from "../storage/path.js";
-import { DEFAULT_SCENARIO_SYSTEM_PROMPT } from "@viragen/shared";
-import type { Project, WorkSnapshot, WorkMeta } from "@viragen/shared";
+import { DEFAULT_SCENARIO_SYSTEM_PROMPT } from "@autovio/shared";
+import type { Project, WorkSnapshot, WorkMeta } from "@autovio/shared";
 
 interface OldProjectSnapshot {
   id: string;

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines the detailed implementation plan for adding an "Extract from Landing" feature to ViraGen. This feature will allow users to analyze a landing page URL and automatically extract style guide information (colors, tone, typography, visual style, etc.) and product information to populate the project's StyleGuide.
+This document outlines the detailed implementation plan for adding an "Extract from Landing" feature to AutoVio. This feature will allow users to analyze a landing page URL and automatically extract style guide information (colors, tone, typography, visual style, etc.) and product information to populate the project's StyleGuide.
 
 ### User Flow
 1. User opens Project Settings in WorksList
@@ -1531,7 +1531,7 @@ await cache.set(cacheKey, result, 3600); // 1 hour TTL
 
 ## Conclusion
 
-This implementation plan provides a comprehensive approach to adding "Extract from Landing" functionality to ViraGen. The feature leverages frontend iframe technology to scrape landing pages, extracts visual and content data, and uses AI to generate structured style guides.
+This implementation plan provides a comprehensive approach to adding "Extract from Landing" functionality to AutoVio. The feature leverages frontend iframe technology to scrape landing pages, extracts visual and content data, and uses AI to generate structured style guides.
 
 The approach balances functionality, performance, and user experience while avoiding complex backend dependencies like Puppeteer. The phased implementation allows for iterative development and testing, ensuring a robust and polished feature.
 

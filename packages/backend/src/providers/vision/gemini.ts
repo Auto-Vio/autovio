@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { AnalysisResult, ModelOption } from "@viragen/shared";
-import { AnalysisResultSchema } from "@viragen/shared";
+import type { AnalysisResult, ModelOption } from "@autovio/shared";
+import { AnalysisResultSchema } from "@autovio/shared";
 import type { IVisionProvider } from "../interfaces.js";
 import { getAnalyzerPrompt } from "../../prompts/analyzer.js";
 

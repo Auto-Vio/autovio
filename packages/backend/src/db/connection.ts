@@ -12,7 +12,7 @@ function getMongoConfig(): MongoDBConfig {
   const uri = process.env.MONGODB_URI?.trim() || "mongodb://localhost:27017";
   const username = process.env.MONGODB_USERNAME?.trim();
   const password = process.env.MONGODB_PASSWORD?.trim();
-  const dbName = process.env.MONGODB_DB_NAME?.trim() || "viragen";
+  const dbName = process.env.MONGODB_DB_NAME?.trim() || "autovio";
   const authSource = process.env.MONGODB_AUTH_SOURCE?.trim() || "admin";
 
   return { uri, username, password, dbName, authSource };

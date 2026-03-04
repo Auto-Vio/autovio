@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { X } from "lucide-react";
-import type { EditorTemplate } from "@viragen/shared";
+import type { EditorTemplate } from "@autovio/shared";
 import { findPlaceholders } from "../../utils/templateUtils";
 
 interface ApplyTemplateDialogProps {

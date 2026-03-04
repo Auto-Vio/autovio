@@ -4,7 +4,7 @@ import type {
   EditorTemplateContent,
   EditorTemplateMeta,
   EditorTemplateList,
-} from "@viragen/shared";
+} from "@autovio/shared";
 import { projectExists } from "./projects.js";
 import {
   EditorTemplateModel,

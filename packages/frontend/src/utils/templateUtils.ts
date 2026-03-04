@@ -3,7 +3,7 @@ import type {
   EditorTemplateContent,
   TemplateTextOverlay,
   TemplateImageOverlay,
-} from "@viragen/shared";
+} from "@autovio/shared";
 
 const PLACEHOLDER_REGEX = /\{\{([^}]+)\}\}/g;
 

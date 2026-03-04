@@ -1145,5 +1145,5 @@ const EditorStateSnapshotSchema = new mongoose.Schema({
 ---
 
 **Son Güncelleme:** 2 Mart 2026  
-**Hazırlayan:** Claude (ViraGen AI Assistant)  
+**Hazırlayan:** Claude (AutoVio AI Assistant)  
 **Review Gerekli:** ✅ Implementation öncesi kullanıcı onayı

@@ -8,7 +8,7 @@ import type { ClipObj } from "../lib/ezffmpeg/index.js";
 import { projectExists } from "../storage/projects.js";
 import { resolveSceneVideoPath, workExists, getResolvedWorkAudioPath } from "../storage/works.js";
 import { getAssetFilePath } from "../storage/assets.js";
-import type { ExportRequest } from "@viragen/shared";
+import type { ExportRequest } from "@autovio/shared";
 
 const router = Router();
 
@@ -118,7 +118,7 @@ router.post("/", async (req, res, next) => {
     // Create ezffmpeg instance and export
     const outputPath = path.join(
       os.tmpdir(),
-      `viragen-export-${randomUUID()}.mp4`,
+      `autovio-export-${randomUUID()}.mp4`,
     );
 
     const ez = new EZFFMPEG({ width, height, fps }, console.log);
@@ -129,7 +129,7 @@ router.post("/", async (req, res, next) => {
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="viragen-export.mp4"',
+      'attachment; filename="autovio-export.mp4"',
     );
 
     const stat = await fs.stat(outputPath);

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { APITokenModel, toAPITokenMeta } from "../db/models/APIToken.js";
 import { authenticate } from "../middleware/auth.js";
-import type { CreateTokenResponse, TokenScope, ALL_TOKEN_SCOPES } from "@viragen/shared";
+import type { CreateTokenResponse, TokenScope, ALL_TOKEN_SCOPES } from "@autovio/shared";
 
 const router = Router();
 

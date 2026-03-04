@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
-import type { ProjectAsset, ProjectAssetList } from "@viragen/shared";
+import type { ProjectAsset, ProjectAssetList } from "@autovio/shared";
 import { projectExists } from "./projects.js";
 import { assetsDir, assetFilePath } from "./path.js";
 import { AssetModel, toProjectAsset } from "../db/index.js";

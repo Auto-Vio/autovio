@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Loader2, ArrowRight, ArrowLeft, AlertCircle, Save } from "lucide-react";
 import { useStore } from "../../store/useStore";
 import { analyzeVideo } from "../../api/client";
-import { styleGuideFromAnalysis } from "@viragen/shared";
+import { styleGuideFromAnalysis } from "@autovio/shared";
 import * as projectStorage from "../../storage/projectStorage";
 import { useToastStore } from "../../store/useToastStore";
 

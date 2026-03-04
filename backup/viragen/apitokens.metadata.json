@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"userId":{"$numberInt":"1"}},"name":"userId_1"},{"v":{"$numberInt":"2"},"key":{"tokenPrefix":{"$numberInt":"1"}},"name":"tokenPrefix_1"}],"uuid":"aebb27bea8b34897a375a3a02fbbc897","collectionName":"apitokens","type":"collection"}

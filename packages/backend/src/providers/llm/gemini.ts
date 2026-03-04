@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ModelOption } from "@viragen/shared";
+import type { ModelOption } from "@autovio/shared";
 import type { ILLMProvider } from "../interfaces.js";
 
 export class GeminiLLMProvider implements ILLMProvider {

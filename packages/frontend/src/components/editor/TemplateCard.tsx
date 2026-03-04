@@ -1,5 +1,5 @@
 import { FileText, Trash2 } from "lucide-react";
-import type { EditorTemplateMeta } from "@viragen/shared";
+import type { EditorTemplateMeta } from "@autovio/shared";
 
 interface TemplateCardProps {
   template: EditorTemplateMeta;

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { ProjectAsset } from "@viragen/shared";
+import type { ProjectAsset } from "@autovio/shared";
 
 export interface AssetDocument {
   _id: string;

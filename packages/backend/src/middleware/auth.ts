@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import type { TokenScope } from "@viragen/shared";
+import type { TokenScope } from "@autovio/shared";
 import { APITokenModel } from "../db/models/APIToken.js";
 
 export interface AuthUser {
@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "viragen-dev-secret-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET || "autovio-dev-secret-change-in-production";
 
 export interface JWTPayload {
   sub: string;

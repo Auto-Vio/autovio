@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 import { extractStyleGuideFromLanding, type ExtractFromLandingProductInfo } from "../../api/client";
 
 export interface ExtractFromLandingResult {

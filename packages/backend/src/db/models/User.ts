@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { User } from "@viragen/shared";
+import type { User } from "@autovio/shared";
 
 export interface UserDocument {
   _id: string;

@@ -1,4 +1,4 @@
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 /**
  * Build style prefix for image generation prompt (color + tone + tempo → visual style).

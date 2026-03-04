@@ -1,6 +1,6 @@
-# ViraGen - Architecture Documentation
+# AutoVio - Architecture Documentation
 
-> This document provides comprehensive context about the ViraGen codebase for LLM understanding. It covers the project's purpose, architecture, data flow, API endpoints, database schema, and AI provider system.
+> This document provides comprehensive context about the AutoVio codebase for LLM understanding. It covers the project's purpose, architecture, data flow, API endpoints, database schema, and AI provider system.
 
 ---
 
@@ -21,9 +21,9 @@
 
 ## 1. Executive Summary
 
-### What is ViraGen?
+### What is AutoVio?
 
-ViraGen is a full-stack AI-powered video generation platform. It enables users to create promotional videos by either:
+AutoVio is a full-stack AI-powered video generation platform. It enables users to create promotional videos by either:
 - **Style Transfer**: Analyzing a reference video and recreating it with new content
 - **Content Remix**: Generating entirely new video content from text descriptions
 
@@ -48,7 +48,7 @@ ViraGen is a full-stack AI-powered video generation platform. It enables users t
 
 ### Architecture Overview
 
-ViraGen is a **monorepo** containing three packages:
+AutoVio is a **monorepo** containing three packages:
 - **Backend**: Express.js REST API that orchestrates AI providers and manages data
 - **Frontend**: React SPA with timeline editor and step-by-step workflow
 - **Shared**: Common TypeScript types and Zod validation schemas
@@ -115,7 +115,7 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 ## 3. Project Structure
 
 ```
-/ViraGen
+/AutoVio
 ├── packages/
 │   ├── backend/                    # Express API server
 │   │   ├── src/
@@ -229,7 +229,7 @@ The system integrates with multiple AI providers (Google Gemini, Anthropic Claud
 
 ### Monorepo Structure
 
-ViraGen uses Bun workspaces to manage three interconnected packages:
+AutoVio uses Bun workspaces to manage three interconnected packages:
 
 **packages/backend**
 - Express.js REST API server
@@ -276,7 +276,7 @@ The React app initialization:
 
 ## 5. Video Generation Pipeline
 
-ViraGen implements a 5-step video generation workflow. Each step builds upon the previous one, and all progress is saved to the database.
+AutoVio implements a 5-step video generation workflow. Each step builds upon the previous one, and all progress is saved to the database.
 
 ### Step 0: InitStep (Configuration)
 
@@ -712,7 +712,7 @@ Project-level editor templates: reusable overlay compositions (text + image over
 
 ## 7. Database Schema
 
-ViraGen uses MongoDB with Mongoose ODM. All models use custom string IDs (not ObjectIds).
+AutoVio uses MongoDB with Mongoose ODM. All models use custom string IDs (not ObjectIds).
 
 ### 7.1 User Model
 
@@ -948,7 +948,7 @@ User (1) ──────> (N) APIToken
 
 ## 8. AI Provider System
 
-ViraGen implements a modular provider system supporting multiple AI services.
+AutoVio implements a modular provider system supporting multiple AI services.
 
 ### 8.1 Provider Categories
 
@@ -1148,8 +1148,8 @@ User Action → Component → Store Action → API Call → Store Update → Re-
 ### 10.3 Provider Configuration (localStorage)
 
 Frontend stores AI provider preferences locally:
-- `viragen_providers`: Selected provider IDs per category
-- `viragen_api_keys`: API keys for each provider
+- `autovio_providers`: Selected provider IDs per category
+- `autovio_api_keys`: API keys for each provider
 
 These are read by `api/client.ts` and sent as headers with each AI-related request.
 

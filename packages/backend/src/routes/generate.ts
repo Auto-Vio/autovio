@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
 import { getImageProvider, getVideoProvider } from "../providers/registry.js";
-import { isStyleGuideEmpty } from "@viragen/shared";
-import type { StyleGuide } from "@viragen/shared";
-import { DEFAULT_IMAGE_INSTRUCTION, DEFAULT_VIDEO_INSTRUCTION } from "@viragen/shared";
+import { isStyleGuideEmpty } from "@autovio/shared";
+import type { StyleGuide } from "@autovio/shared";
+import { DEFAULT_IMAGE_INSTRUCTION, DEFAULT_VIDEO_INSTRUCTION } from "@autovio/shared";
 import { buildImageStylePrefix } from "../prompts/image.js";
 import { buildVideoStylePrefix } from "../prompts/video.js";
 import { authenticate, requireScope } from "../middleware/auth.js";

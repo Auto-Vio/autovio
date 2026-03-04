@@ -2,7 +2,7 @@ import { Router, type Request } from "express";
 import multer from "multer";
 import fs from "fs/promises";
 import path from "path";
-import type { WorkSnapshot } from "@viragen/shared";
+import type { WorkSnapshot } from "@autovio/shared";
 import {
   listWorks,
   getWork,

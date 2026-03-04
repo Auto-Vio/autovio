@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { AnalysisResultSchema, UserIntentSchema } from "@viragen/shared";
-import type { ScenarioScene, StyleGuide } from "@viragen/shared";
-import { ScenarioSceneSchema } from "@viragen/shared";
-import { isStyleGuideEmpty } from "@viragen/shared";
+import { AnalysisResultSchema, UserIntentSchema } from "@autovio/shared";
+import type { ScenarioScene, StyleGuide } from "@autovio/shared";
+import { ScenarioSceneSchema } from "@autovio/shared";
+import { isStyleGuideEmpty } from "@autovio/shared";
 import { z } from "zod";
 import { getLLMProvider } from "../providers/registry.js";
 import {

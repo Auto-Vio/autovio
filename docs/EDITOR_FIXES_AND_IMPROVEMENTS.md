@@ -1448,7 +1448,7 @@ router.post("/export", auth, async (req, res) => {
     const ez = new EZFFMPEG(options, console.log);
     await ez.load(clipObjs);
     
-    const outputPath = path.join(tmpdir(), `viragen-${Date.now()}.mp4`);
+    const outputPath = path.join(tmpdir(), `autovio-${Date.now()}.mp4`);
     
     // Export with progress callback
     await ez.export({
@@ -1539,7 +1539,7 @@ const handleExport = async () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "viragen-export.mp4";
+    a.download = "autovio-export.mp4";
     a.click();
     URL.revokeObjectURL(url);
     
@@ -2335,5 +2335,5 @@ EXPECTED: Hepsi yüklenir ve export'ta çalışır
 ---
 
 **Son Güncelleme:** 2 Mart 2026  
-**Hazırlayan:** Claude (ViraGen AI Assistant)  
+**Hazırlayan:** Claude (AutoVio AI Assistant)  
 **Review Gerekli:** ✅ Implementation öncesi kullanıcı onayı

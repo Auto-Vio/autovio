@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { Project, StyleGuide } from "@viragen/shared";
+import type { Project, StyleGuide } from "@autovio/shared";
 
 export interface ProjectDocument {
   _id: string;

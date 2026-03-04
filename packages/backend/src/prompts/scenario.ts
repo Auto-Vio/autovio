@@ -1,5 +1,5 @@
-import type { AnalysisResult, UserIntent, StyleGuide } from "@viragen/shared";
-import { DEFAULT_SCENARIO_SYSTEM_PROMPT } from "@viragen/shared";
+import type { AnalysisResult, UserIntent, StyleGuide } from "@autovio/shared";
+import { DEFAULT_SCENARIO_SYSTEM_PROMPT } from "@autovio/shared";
 
 /**
  * Format StyleGuide into markdown for scenario system prompt

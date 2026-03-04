@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { APITokenMeta, TokenScope } from "@viragen/shared";
+import type { APITokenMeta, TokenScope } from "@autovio/shared";
 
 export interface APITokenDocument {
   _id: string;

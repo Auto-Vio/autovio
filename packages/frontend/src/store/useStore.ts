@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { AnalysisResult, ScenarioScene, ProviderConfig, StyleGuide } from "@viragen/shared";
+import type { AnalysisResult, ScenarioScene, ProviderConfig, StyleGuide } from "@autovio/shared";
 import { getProviderConfig, generateImage as apiGenerateImage, generateVideo as apiGenerateVideo } from "../api/client";
-import type { WorkSnapshot, EditorStateSnapshot, EditorTemplateMeta } from "@viragen/shared";
+import type { WorkSnapshot, EditorStateSnapshot, EditorTemplateMeta } from "@autovio/shared";
 import * as projectStorage from "../storage/projectStorage";
 
 export type PipelineStep = 0 | 1 | 2 | 3 | 4;
@@ -693,7 +693,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   setShowSettings: (showSettings) => set({ showSettings }),
   setProviderConfig: (providerConfig) => {
-    localStorage.setItem("viragen_providers", JSON.stringify(providerConfig));
+    localStorage.setItem("autovio_providers", JSON.stringify(providerConfig));
     set({ providerConfig });
   },
 

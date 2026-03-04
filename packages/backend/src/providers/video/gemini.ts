@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import type { ModelOption } from "@viragen/shared";
+import type { ModelOption } from "@autovio/shared";
 import type { IVideoProvider } from "../interfaces.js";
 
 /** Veo 3 is available via Gemini API (same API key as image/LLM). */

@@ -1,5 +1,5 @@
 import { X, FileText, Loader2 } from "lucide-react";
-import type { EditorTemplateMeta } from "@viragen/shared";
+import type { EditorTemplateMeta } from "@autovio/shared";
 import TemplateCard from "./TemplateCard";
 
 interface TemplatesPanelProps {

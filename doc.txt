@@ -1,9 +1,9 @@
-ViraGen
+AutoVio
 AI-Powered Social Media Video Generation Pipeline
 Teknik Mimari & Geliştirici Dökümanı
 v0.1.0 — Şubat 2026
 1. Proje Genel Bakış
-ViraGen, kullanıcının bir referans sosyal medya videosu yüklemesiyle başlayan ve tamamen AI destekli bir pipeline aracılığıyla benzer yeni bir video üreten, open-source bir local web uygulamasıdır.
+AutoVio, kullanıcının bir referans sosyal medya videosu yüklemesiyle başlayan ve tamamen AI destekli bir pipeline aracılığıyla benzer yeni bir video üreten, open-source bir local web uygulamasıdır.
 Temel felsefe: Her component model-agnostic olacak. Hangi AI modelinin kullanılacağı kullanıcı tarafından seçilebilir, API key'ler kullanıcıya aittir.
 1.1 Kullanım Senaryoları
 Style Transfer Modu: Referans videonun stilini al, kendi ürünün için yeniden üret
@@ -148,6 +148,6 @@ Sıralama, logo, metin, müzik, geçiş efektleri, export (MP4)
 
 4. Provider Sistemi
 Tüm AI entegrasyonları providers.config.json üzerinden yönetilir. Kullanıcı Settings ekranından provider seçer ve API key girer. Key'ler browser localStorage'da tutulur, backend'e sadece istek anında gönderilir, hiçbir zaman sunucuda saklanmaz.
-Bu döküman ViraGen projesinin ilk sürümüdür. Geliştirme sürecinde güncellenecektir.
+Bu döküman AutoVio projesinin ilk sürümüdür. Geliştirme sürecinde güncellenecektir.
 
 

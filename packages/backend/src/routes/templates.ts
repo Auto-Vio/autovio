@@ -6,7 +6,7 @@ import type {
   TimelineActionSnapshot,
   TextOverlaySnapshot,
   ImageOverlaySnapshot,
-} from "@viragen/shared";
+} from "@autovio/shared";
 import {
   getTemplate,
   listTemplates,

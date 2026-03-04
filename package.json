@@ -1,13 +1,13 @@
 {
-  "name": "viragen",
+  "name": "autovio",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"bun run dev:backend\" \"bun run dev:frontend\"",
-    "dev:backend": "bun run --filter @viragen/backend dev",
-    "dev:frontend": "bun run --filter @viragen/frontend dev",
+    "dev:backend": "bun run --filter @autovio/backend dev",
+    "dev:frontend": "bun run --filter @autovio/frontend dev",
     "build": "bun run --filter '*' build",
     "typecheck": "bun run --filter '*' typecheck"
   },

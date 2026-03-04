@@ -1,4 +1,4 @@
-import type { AnalysisResult, ScenarioScene, ProviderInfo, ProviderConfig, StyleGuide } from "@viragen/shared";
+import type { AnalysisResult, ScenarioScene, ProviderInfo, ProviderConfig, StyleGuide } from "@autovio/shared";
 import { getAuthToken } from "../store/useAuthStore";
 
 const DEFAULT_CONFIG: ProviderConfig = {
@@ -10,7 +10,7 @@ const DEFAULT_CONFIG: ProviderConfig = {
 
 function getApiKeys(): Record<string, string> {
   try {
-    return JSON.parse(localStorage.getItem("viragen_api_keys") || "{}");
+    return JSON.parse(localStorage.getItem("autovio_api_keys") || "{}");
   } catch {
     return {};
   }
@@ -18,7 +18,7 @@ function getApiKeys(): Record<string, string> {
 
 export function getProviderConfig(): ProviderConfig {
   try {
-    const stored = localStorage.getItem("viragen_providers");
+    const stored = localStorage.getItem("autovio_providers");
     if (stored) return JSON.parse(stored);
     return DEFAULT_CONFIG;
   } catch {

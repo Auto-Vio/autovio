@@ -1,10 +1,10 @@
 import fs from "fs/promises";
-import type { Project, ProjectMeta } from "@viragen/shared";
+import type { Project, ProjectMeta } from "@autovio/shared";
 import {
   DEFAULT_SCENARIO_SYSTEM_PROMPT,
   DEFAULT_IMAGE_INSTRUCTION,
   DEFAULT_VIDEO_INSTRUCTION,
-} from "@viragen/shared";
+} from "@autovio/shared";
 import { ProjectModel, toProject, WorkModel, AssetModel } from "../db/index.js";
 import { projectDir } from "./path.js";
 

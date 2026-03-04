@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Key, Plus, Trash2, Copy, Check, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
-import type { TokenScope, CreateTokenRequest } from "@viragen/shared";
+import type { TokenScope, CreateTokenRequest } from "@autovio/shared";
 
 const SCOPE_LABELS: Record<TokenScope, string> = {
   "projects:read": "Read Projects",

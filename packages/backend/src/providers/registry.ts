@@ -4,7 +4,7 @@ import type {
   IImageProvider,
   IVideoProvider,
 } from "./interfaces.js";
-import type { ProviderInfo } from "@viragen/shared";
+import type { ProviderInfo } from "@autovio/shared";
 
 // Vision providers
 import { GeminiVisionProvider } from "./vision/gemini.js";

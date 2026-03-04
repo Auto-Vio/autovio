@@ -1,5 +1,5 @@
 {
-  "name": "@viragen/frontend",
+  "name": "@autovio/frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   "dependencies": {
 "@twick/browser-render": "^0.15.19",
     "@twick/studio": "^0.15.19",
-    "@viragen/shared": "workspace:*",
+    "@autovio/shared": "workspace:*",
     "@xzdarcy/react-timeline-editor": "^1.0.0",
     "@xzdarcy/timeline-engine": "1.0.0",
     "fabric": "^6.5.5",

@@ -1,4 +1,4 @@
-# ViraGen — UI/UX İyileştirme Önerileri
+# AutoVio — UI/UX İyileştirme Önerileri
 
 Bu dokümanda projenin mantığı kısaca özetlenmiş, mevcut arayüz analiz edilmiş ve UI/UX geliştirici perspektifinden somut iyileştirme önerileri listelenmiştir.
 
@@ -8,7 +8,7 @@ Bu dokümanda projenin mantığı kısaca özetlenmiş, mevcut arayüz analiz ed
 
 ## 1. Proje Mantığı Özeti
 
-**ViraGen**, referans video veya metin tanımından yola çıkarak AI ile sosyal medya videoları üreten yerel-first bir web uygulamasıdır.
+**AutoVio**, referans video veya metin tanımından yola çıkarak AI ile sosyal medya videoları üreten yerel-first bir web uygulamasıdır.
 
 - **Akış:** Proje → Çalışma → Setup (kaynak + mod + ürün/niat) → Analyze (referans video) → Scenario (sahne listesi) → Generate (sahne başına görsel + video) → Editor (timeline, metin, ses, export).
 - **Modlar:** Style transfer (referans stilini kendi ürününe uygula), Content remix (içeriği farklı açıdan yeniden kurgula).
@@ -131,7 +131,7 @@ Bu dokümanda projenin mantığı kısaca özetlenmiş, mevcut arayüz analiz ed
 - **Proje/Çalışma kartları:** Son güncelleme “2 gün önce” gibi relative time (örn. `date-fns` `formatDistanceToNow`) ile daha okunabilir.
 - **InitStep video önizleme:** Yükleme sonrası küçük bir thumbnail veya süre bilgisi (örn. “1:24”) gösterilebilir.
 - **ScenarioStep:** “Regenerate All” yerine “Senaryoyu yeniden oluştur” gibi net etiket; sahne kartlarında “Image Prompt” / “Video Prompt” yerine “Görsel açıklaması” / “Video hareketi açıklaması” gibi kullanıcı dostu etiketler.
-- **Header:** Versiyon (v0.1.0) daha soluk veya daha küçük; ana marka “ViraGen” öne çıksın.
+- **Header:** Versiyon (v0.1.0) daha soluk veya daha küçük; ana marka “AutoVio” öne çıksın.
 - **Renk çeşidi:** Primary aksiyonlar hep mor; “Export” yeşil kalabilir, “Yeni Proje/Çalışma” mor. Tehlike (Sil) kırmızı tutulmuş; tutarlılık korunsun.
 
 ---
@@ -154,6 +154,6 @@ Bu dokümanda projenin mantığı kısaca özetlenmiş, mevcut arayüz analiz ed
 
 ## 5. Sonuç
 
-ViraGen’in akışı ve bileşen yapısı net; iyileştirmeler çoğunlukla tutarlılık (dil, geri bildirim, hiyerarşi), sadeleştirme (formlar, ayarlar) ve erişilebilirlik/responsive ile kullanılabilirliği artırmaya yönelik. Önce dil ve onay/toast gibi hızlı kazanımlar, ardından form/stepper ve mobil düzen, en sonda a11y ve editor ipuçları uygulanabilir.
+AutoVio’in akışı ve bileşen yapısı net; iyileştirmeler çoğunlukla tutarlılık (dil, geri bildirim, hiyerarşi), sadeleştirme (formlar, ayarlar) ve erişilebilirlik/responsive ile kullanılabilirliği artırmaya yönelik. Önce dil ve onay/toast gibi hızlı kazanımlar, ardından form/stepper ve mobil düzen, en sonda a11y ve editor ipuçları uygulanabilir.
 
 Bu dokümandaki maddeler doğrudan issue/task olarak bölünüp sprint’lere dağıtılabilir.

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useStore } from "../store/useStore";
 import { useToastStore } from "../store/useToastStore";
 import { listProjects, deleteProject } from "../storage/projectStorage";
-import type { ProjectMeta } from "@viragen/shared";
+import type { ProjectMeta } from "@autovio/shared";
 import ConfirmModal from "./ui/ConfirmModal";
 import { SkeletonCardList } from "./ui/SkeletonCard";
 

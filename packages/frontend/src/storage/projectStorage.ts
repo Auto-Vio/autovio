@@ -11,7 +11,7 @@ import type {
   EditorTemplateContent,
   TemplateApplicationRequest,
   TemplateApplicationResult,
-} from "@viragen/shared";
+} from "@autovio/shared";
 import { getAuthToken } from "../store/useAuthStore";
 
 const API = "/api/projects";

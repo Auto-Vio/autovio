@@ -1,4 +1,4 @@
-import type { ModelOption } from "@viragen/shared";
+import type { ModelOption } from "@autovio/shared";
 import type { IImageProvider } from "../interfaces.js";
 
 export class FluxProvider implements IImageProvider {

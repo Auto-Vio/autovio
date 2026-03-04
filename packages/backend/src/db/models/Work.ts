@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { WorkSnapshot, AnalysisResult, ScenarioScene, GeneratedSceneSnapshot, PipelineStep, EditorStateSnapshot } from "@viragen/shared";
+import type { WorkSnapshot, AnalysisResult, ScenarioScene, GeneratedSceneSnapshot, PipelineStep, EditorStateSnapshot } from "@autovio/shared";
 
 export interface WorkDocument {
   _id: string;

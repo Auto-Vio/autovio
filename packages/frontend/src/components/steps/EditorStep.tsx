@@ -24,13 +24,13 @@ import type {
   TransitionType,
 } from "../editor/types";
 import type { TimelineEffect } from "@xzdarcy/timeline-engine";
-import type { ScenarioScene, EditorStateSnapshot, EditorTemplate } from "@viragen/shared";
+import type { ScenarioScene, EditorStateSnapshot, EditorTemplate } from "@autovio/shared";
 import VideoPreview, { createVideoEffect } from "../editor/VideoPreview";
 import PropertiesPanel from "../editor/PropertiesPanel";
 import EditorTimeline from "../editor/EditorTimeline";
 import ExportDialog from "../editor/ExportDialog";
 import AssetPickerDialog from "../editor/AssetPickerDialog";
-import type { ProjectAsset } from "@viragen/shared";
+import type { ProjectAsset } from "@autovio/shared";
 
 function resolveUrl(url: string | undefined, map: Record<string, string>): string | undefined {
   if (!url) return undefined;

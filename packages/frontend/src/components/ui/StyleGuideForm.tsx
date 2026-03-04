@@ -1,4 +1,4 @@
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 interface StyleGuideFormProps {
   value: StyleGuide | undefined;

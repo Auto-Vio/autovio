@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Download, Loader2, X } from "lucide-react";
 import type { TimelineRow, ClipMetaMap, TextOverlayMap, ImageOverlayMap, AudioMeta, ExportSettings } from "./types";
-import type { ExportRequest } from "@viragen/shared";
-import type { ScenarioScene } from "@viragen/shared";
+import type { ExportRequest } from "@autovio/shared";
+import type { ScenarioScene } from "@autovio/shared";
 import { getAuthToken } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";
 
@@ -155,7 +155,7 @@ export default function ExportDialog({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "viragen-export.mp4";
+      a.download = "autovio-export.mp4";
       a.click();
       URL.revokeObjectURL(url);
       addToast("Video exported successfully", "success");

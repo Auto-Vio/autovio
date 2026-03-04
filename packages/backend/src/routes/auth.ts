@@ -8,7 +8,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../middleware/auth.js";
-import type { AuthResponse, RefreshTokenResponse } from "@viragen/shared";
+import type { AuthResponse, RefreshTokenResponse } from "@autovio/shared";
 
 const router = Router();
 

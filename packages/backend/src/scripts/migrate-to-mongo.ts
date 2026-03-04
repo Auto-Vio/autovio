@@ -18,7 +18,7 @@ dotenv.config({ path: path.resolve(__dirnameMigrate, "../../../../.env") });
 import mongoose from "mongoose";
 import { ProjectModel } from "../db/models/Project.js";
 import { WorkModel } from "../db/models/Work.js";
-import type { Project, WorkSnapshot, ProjectMeta, WorkMeta } from "@viragen/shared";
+import type { Project, WorkSnapshot, ProjectMeta, WorkMeta } from "@autovio/shared";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.VIRAGEN_DATA_DIR ?? path.join(__dirname, "..", "..", "data");
@@ -28,7 +28,7 @@ function buildConnectionString(): string {
   const uri = process.env.MONGODB_URI?.trim() || "mongodb://localhost:27017";
   const username = process.env.MONGODB_USERNAME?.trim();
   const password = process.env.MONGODB_PASSWORD?.trim();
-  const dbName = process.env.MONGODB_DB_NAME?.trim() || "viragen";
+  const dbName = process.env.MONGODB_DB_NAME?.trim() || "autovio";
   const authSource = process.env.MONGODB_AUTH_SOURCE?.trim() || "admin";
 
   if (uri.includes("@")) {

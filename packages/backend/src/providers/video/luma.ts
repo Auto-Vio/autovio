@@ -1,4 +1,4 @@
-import type { ModelOption } from "@viragen/shared";
+import type { ModelOption } from "@autovio/shared";
 import type { IVideoProvider } from "../interfaces.js";
 
 export class LumaProvider implements IVideoProvider {

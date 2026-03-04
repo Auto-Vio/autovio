@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import type { User, AuthResponse, APITokenMeta, CreateTokenRequest, CreateTokenResponse } from "@viragen/shared";
+import type { User, AuthResponse, APITokenMeta, CreateTokenRequest, CreateTokenResponse } from "@autovio/shared";
 
-const AUTH_TOKEN_KEY = "viragen_auth_token";
-const REFRESH_TOKEN_KEY = "viragen_refresh_token";
-const USER_KEY = "viragen_user";
+const AUTH_TOKEN_KEY = "autovio_auth_token";
+const REFRESH_TOKEN_KEY = "autovio_refresh_token";
+const USER_KEY = "autovio_user";
 
 interface AuthState {
   user: User | null;

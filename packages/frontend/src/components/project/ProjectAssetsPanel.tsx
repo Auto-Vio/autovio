@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Image, Video, Music, Type, Upload, Trash2, Eye, Loader2 } from "lucide-react";
-import type { ProjectAsset } from "@viragen/shared";
+import type { ProjectAsset } from "@autovio/shared";
 import { listProjectAssets, getProjectAssetUrl, deleteProjectAsset } from "../../storage/projectStorage";
 import { getAuthToken } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";

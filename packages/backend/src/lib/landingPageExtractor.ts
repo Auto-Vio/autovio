@@ -23,7 +23,7 @@ export interface LandingPageData {
 }
 
 const DEFAULT_USER_AGENT =
-  "Mozilla/5.0 (compatible; ViraGen/1.0; +https://github.com/viragen)";
+  "Mozilla/5.0 (compatible; AutoVio/1.0; +https://github.com/autovio)";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_HTML_SNIPPET = 5000;
 const MAX_HTML_SNIPPET_FEATURE = 4000;

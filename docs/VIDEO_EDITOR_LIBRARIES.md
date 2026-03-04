@@ -1,10 +1,10 @@
-# Video Editör Kütüphaneleri — ViraGen için Değerlendirme
+# Video Editör Kütüphaneleri — AutoVio için Değerlendirme
 
-Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve ViraGen projesine uygunluğunu özetler.
+Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve AutoVio projesine uygunluğunu özetler.
 
 ---
 
-## Mevcut ViraGen Editör (Eksikler)
+## Mevcut AutoVio Editör (Eksikler)
 
 - **Timeline:** Sadece yatay sıralanabilir kart listesi (@dnd-kit). Zaman çizelgesi (time ruler), playhead, zoom, trim yok.
 - **Canvas:** Fabric.js ile metin/logo overlay. Sadece önizleme; export’a bağlı değil.
@@ -15,7 +15,7 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 
 ## Popüler JavaScript / React Video Editör Kütüphaneleri
 
-### 1. **Twick** (Önerilen — ViraGen’e en uygun)
+### 1. **Twick** (Önerilen — AutoVio’e en uygun)
 
 | Özellik | Detay |
 |--------|--------|
@@ -27,7 +27,7 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 | **Artıları** | AI-first tasarım, tam kontrol, modüler paketler, React + TypeScript |
 | **Eksileri** | Hazır UI sınırlı; kendi kontrollerinizi yazmanız gerekebilir |
 
-**ViraGen uyumu:** AI ile üretilen klipleri timeline’a alıp sıralama/trim ve export etmek için çok uygun. Mevcut ffmpeg.wasm export’unuzu Twick timeline verisiyle besleyebilir veya Twick’in export katmanını entegre edebilirsiniz.
+**AutoVio uyumu:** AI ile üretilen klipleri timeline’a alıp sıralama/trim ve export etmek için çok uygun. Mevcut ffmpeg.wasm export’unuzu Twick timeline verisiyle besleyebilir veya Twick’in export katmanını entegre edebilirsiniz.
 
 - Dokümantasyon: https://ncounterspecialist.github.io/twick/
 - Repo: https://github.com/ncounterspecialist/twick
@@ -45,7 +45,7 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 | **Artıları** | Gelişmiş timeline, düzenli güncellemeler (2025) |
 | **Eksileri** | Paketli sürüm özel npm; tam entegrasyon maliyeti belirsiz |
 
-**ViraGen uyumu:** “Drop-in” timeline istiyorsanız güçlü aday. Lisans ve veri modeli (kliplerinizi RVE formatına dönüştürme) netleştirilmeli.
+**AutoVio uyumu:** “Drop-in” timeline istiyorsanız güçlü aday. Lisans ve veri modeli (kliplerinizi RVE formatına dönüştürme) netleştirilmeli.
 
 - Site: https://www.reactvideoeditor.com/
 
@@ -62,7 +62,7 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 | **Artıları** | Esnek, güçlü render, React bileşenleriyle sahne tanımı |
 | **Eksileri** | Görsel, sürükle-bırak timeline istiyorsanız sıfırdan inşa etmeniz gerekir |
 
-**ViraGen uyumu:** Kullanıcı timeline’da sürükle-bırak ile düzenleme istiyorsa doğal seçim değil. Tamamen kodla kompozisyon ve render planlıyorsanız değerlendirilebilir.
+**AutoVio uyumu:** Kullanıcı timeline’da sürükle-bırak ile düzenleme istiyorsa doğal seçim değil. Tamamen kodla kompozisyon ve render planlıyorsanız değerlendirilebilir.
 
 - Site: https://www.remotion.dev/
 
@@ -78,7 +78,7 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 | **Artıları** | Hızlı prototip, hazır UI |
 | **Eksileri** | Kapalı kutu, AI / özel pipeline için özelleştirme sınırlı; maliyet |
 
-**ViraGen uyumu:** Hızlı “hazır editör” istiyorsanız mantıklı; bütçe ve AI akışına tam uyum ihtiyacıyla tartılmalı.
+**AutoVio uyumu:** Hızlı “hazır editör” istiyorsanız mantıklı; bütçe ve AI akışına tam uyum ihtiyacıyla tartılmalı.
 
 ---
 
@@ -91,11 +91,11 @@ Bu doküman, JavaScript/React ekosistemindeki video editör kütüphanelerini ve
 | AI / özel pipeline uyumu | ✅ Çok iyi | ⚠️ Uyarlanabilir | ✅ Kod ile | ⚠️ Sınırlı |
 | Sürükle-bırak kullanıcı deneyimi | ✅ | ✅ | ❌ | ✅ |
 | Export esnekliği (ffmpeg / kendi backend) | ✅ | ⚠️ | ✅ | API’ye bağlı |
-| ViraGen’e entegrasyon zorluğu | Düşük | Orta | Yüksek (timeline yok) | Orta + maliyet |
+| AutoVio’e entegrasyon zorluğu | Düşük | Orta | Yüksek (timeline yok) | Orta + maliyet |
 
 ---
 
-## ViraGen İçin Öneri
+## AutoVio İçin Öneri
 
 **Birinci seçenek: Twick**
 

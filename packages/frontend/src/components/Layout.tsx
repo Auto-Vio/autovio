@@ -46,7 +46,7 @@ export default function Layout({ children, onShowTokens }: LayoutProps) {
       <header className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent flex-shrink-0">
-            ViraGen
+            AutoVio
           </h1>
           <span className="text-xs text-gray-500 border border-gray-700 rounded px-2 py-0.5 flex-shrink-0">
             v0.1.0

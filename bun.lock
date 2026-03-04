@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "viragen",
+      "name": "autovio",
       "dependencies": {
         "cheerio": "^1.2.0",
       },
@@ -13,13 +13,13 @@
       },
     },
     "packages/backend": {
-      "name": "@viragen/backend",
+      "name": "@autovio/backend",
       "version": "0.1.0",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.39.0",
         "@google/genai": "^1.42.0",
         "@google/generative-ai": "^0.21.0",
-        "@viragen/shared": "workspace:*",
+        "@autovio/shared": "workspace:*",
         "bcrypt": "^5.1.1",
         "cors": "^2.8.5",
         "dotenv": "^17.3.1",
@@ -40,12 +40,12 @@
       },
     },
     "packages/frontend": {
-      "name": "@viragen/frontend",
+      "name": "@autovio/frontend",
       "version": "0.1.0",
       "dependencies": {
         "@twick/browser-render": "^0.15.19",
         "@twick/studio": "^0.15.19",
-        "@viragen/shared": "workspace:*",
+        "@autovio/shared": "workspace:*",
         "@xzdarcy/react-timeline-editor": "^1.0.0",
         "@xzdarcy/timeline-engine": "1.0.0",
         "fabric": "^6.5.5",
@@ -65,7 +65,7 @@
       },
     },
     "packages/shared": {
-      "name": "@viragen/shared",
+      "name": "@autovio/shared",
       "version": "0.1.0",
       "dependencies": {
         "zod": "^3.24.2",
@@ -489,11 +489,11 @@
 
     "@use-gesture/react": ["@use-gesture/react@10.3.1", "", { "dependencies": { "@use-gesture/core": "10.3.1" }, "peerDependencies": { "react": ">= 16.8.0" } }, "sha512-Yy19y6O2GJq8f7CHf7L0nxL8bf4PZCPaVOCgJrusOeFHY1LvHgYXnmnXg6N5iwAnbgbZCDjo60SiM6IPJi9C5g=="],
 
-    "@viragen/backend": ["@viragen/backend@workspace:packages/backend"],
+    "@autovio/backend": ["@autovio/backend@workspace:packages/backend"],
 
-    "@viragen/frontend": ["@viragen/frontend@workspace:packages/frontend"],
+    "@autovio/frontend": ["@autovio/frontend@workspace:packages/frontend"],
 
-    "@viragen/shared": ["@viragen/shared@workspace:packages/shared"],
+    "@autovio/shared": ["@autovio/shared@workspace:packages/shared"],
 
     "@vitejs/plugin-react": ["@vitejs/plugin-react@4.7.0", "", { "dependencies": { "@babel/core": "^7.28.0", "@babel/plugin-transform-react-jsx-self": "^7.27.1", "@babel/plugin-transform-react-jsx-source": "^7.27.1", "@rolldown/pluginutils": "1.0.0-beta.27", "@types/babel__core": "^7.20.5", "react-refresh": "^0.17.0" }, "peerDependencies": { "vite": "^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA=="],
 

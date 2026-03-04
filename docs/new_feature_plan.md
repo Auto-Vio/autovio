@@ -284,7 +284,7 @@ export interface Project {
 **File:** `packages/backend/src/db/models/Project.ts`
 
 ```typescript
-import type { Project, StyleGuide } from "@viragen/shared";
+import type { Project, StyleGuide } from "@autovio/shared";
 
 export interface ProjectDocument {
   // ... existing fields ...
@@ -375,7 +375,7 @@ import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
 import { getLLMProvider } from "../providers/registry.js";
 import { getStyleGuideExtractionPrompt } from "../prompts/style-guide.js";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 const router = Router();
 
@@ -472,7 +472,7 @@ app.use("/api/style-guide", styleGuideRoutes);
 **File:** `packages/backend/src/routes/scenario.ts`
 
 ```typescript
-import { isStyleGuideEmpty } from "@viragen/shared";
+import { isStyleGuideEmpty } from "@autovio/shared";
 import { formatStyleGuideForPrompt } from "../prompts/scenario.js";
 
 router.post("/", authenticate, async (req, res) => {
@@ -501,7 +501,7 @@ router.post("/", authenticate, async (req, res) => {
 **File:** `packages/backend/src/prompts/scenario.ts`
 
 ```typescript
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 /**
  * Format StyleGuide into markdown for scenario system prompt
@@ -539,7 +539,7 @@ export function formatStyleGuideForPrompt(guide: StyleGuide): string {
 **File:** `packages/backend/src/routes/generate.ts`
 
 ```typescript
-import { isStyleGuideEmpty } from "@viragen/shared";
+import { isStyleGuideEmpty } from "@autovio/shared";
 import { buildImageStylePrefix } from "../prompts/image.js";
 
 // Image generation endpoint
@@ -575,7 +575,7 @@ router.post("/image", authenticate, async (req, res) => {
 **File:** `packages/backend/src/prompts/image.ts` (NEW)
 
 ```typescript
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 /**
  * Build style prefix for image generation prompt
@@ -700,7 +700,7 @@ router.post("/video", authenticate, async (req, res) => {
 **File:** `packages/backend/src/prompts/video.ts` (NEW)
 
 ```typescript
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 /**
  * Build style prefix for video generation prompt
@@ -772,7 +772,7 @@ function toneToCinematic(tone: string): string {
 
 ```typescript
 import React from "react";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 interface StyleGuideFormProps {
   value: StyleGuide | undefined;
@@ -939,7 +939,7 @@ export function StyleGuideForm({ value, onChange, onExtract, isExtracting }: Sty
 **Add imports:**
 ```typescript
 import { StyleGuideForm } from "./ui/StyleGuideForm";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 ```
 
 **Add state variables:**
@@ -1098,7 +1098,7 @@ export async function generateVideo(
 
 **Add import:**
 ```typescript
-import { styleGuideFromAnalysis } from "@viragen/shared";
+import { styleGuideFromAnalysis } from "@autovio/shared";
 ```
 
 **Add handler:**
@@ -1226,7 +1226,7 @@ const result = await generateVideo(imageUrl, scene.video_prompt, duration, {
 
 ```typescript
 import React, { useState } from "react";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 
 interface PromptPreviewProps {
   type: "scenario" | "image" | "video";

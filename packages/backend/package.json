@@ -1,5 +1,5 @@
 {
-  "name": "@viragen/backend",
+  "name": "@autovio/backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^1.42.0",
     "@google/generative-ai": "^0.21.0",
-    "@viragen/shared": "workspace:*",
+    "@autovio/shared": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^4.21.2",

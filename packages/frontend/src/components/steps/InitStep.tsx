@@ -8,7 +8,7 @@ import ExtractFromLandingModal from "../ui/ExtractFromLandingModal";
 
 function hasApiKeyConfigured(): boolean {
   try {
-    const keys = JSON.parse(localStorage.getItem("viragen_api_keys") || "{}");
+    const keys = JSON.parse(localStorage.getItem("autovio_api_keys") || "{}");
     const config = getProviderConfig();
     // LLM key is always needed (scenario builder). Vision key only if reference video.
     return Boolean(keys[config.llm.providerId]);

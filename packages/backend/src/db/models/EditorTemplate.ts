@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { EditorTemplate, EditorTemplateContent } from "@viragen/shared";
+import type { EditorTemplate, EditorTemplateContent } from "@autovio/shared";
 
 export interface EditorTemplateDocument {
   _id: string;

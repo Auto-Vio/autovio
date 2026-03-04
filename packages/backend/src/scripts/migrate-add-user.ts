@@ -21,7 +21,7 @@ import { connectDB, disconnectDB } from "../db/index.js";
 import { UserModel } from "../db/models/User.js";
 import { ProjectModel } from "../db/models/Project.js";
 
-const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || "admin@viragen.local";
+const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || "admin@autovio.local";
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || "changeme123";
 const DEFAULT_ADMIN_NAME = process.env.DEFAULT_ADMIN_NAME || "Admin";
 

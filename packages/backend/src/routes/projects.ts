@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Project } from "@viragen/shared";
+import type { Project } from "@autovio/shared";
 import {
   listProjects,
   getProject,

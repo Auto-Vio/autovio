@@ -1,4 +1,4 @@
-import type { AnalysisResult, ModelOption } from "@viragen/shared";
+import type { AnalysisResult, ModelOption } from "@autovio/shared";
 
 export interface IVisionProvider {
   readonly id: string;

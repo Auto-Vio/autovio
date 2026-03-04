@@ -8,7 +8,7 @@ import {
   buildFeaturePrompt,
 } from "../prompts/landing-page.js";
 import { extractLandingPageData } from "../lib/landingPageExtractor.js";
-import type { StyleGuide } from "@viragen/shared";
+import type { StyleGuide } from "@autovio/shared";
 import { authenticate, requireScope } from "../middleware/auth.js";
 
 const router = Router();

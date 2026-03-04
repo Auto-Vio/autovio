@@ -1,8 +1,8 @@
 import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useStore } from "../../store/useStore";
-import type { ProviderConfig, ProviderInfo, ProviderCategory } from "@viragen/shared";
-import { DEFAULT_ANALYZER_PROMPT } from "@viragen/shared";
+import type { ProviderConfig, ProviderInfo, ProviderCategory } from "@autovio/shared";
+import { DEFAULT_ANALYZER_PROMPT } from "@autovio/shared";
 import { fetchProviders } from "../../api/client";
 
 export default function ProviderSettings() {
@@ -45,7 +45,7 @@ export default function ProviderSettings() {
         })
         .catch(console.error);
       try {
-        setApiKeys(JSON.parse(localStorage.getItem("viragen_api_keys") || "{}"));
+        setApiKeys(JSON.parse(localStorage.getItem("autovio_api_keys") || "{}"));
       } catch {
         setApiKeys({});
       }
@@ -54,7 +54,7 @@ export default function ProviderSettings() {
 
   const saveKeys = (keys: Record<string, string>) => {
     setApiKeys(keys);
-    localStorage.setItem("viragen_api_keys", JSON.stringify(keys));
+    localStorage.setItem("autovio_api_keys", JSON.stringify(keys));
   };
 
   if (!showSettings) return null;
