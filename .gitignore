@@ -7,3 +7,4 @@ uploads/
 data/
 *.tsbuildinfo
 Archive.zip
+.plans/
