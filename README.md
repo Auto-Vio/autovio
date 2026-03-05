@@ -55,19 +55,41 @@ Use MCP-compatible apps for video generation on the go:
 
 ## Requirements
 
-- [Bun](https://bun.sh/) >= 1.0
-- [MongoDB](https://www.mongodb.com/) (local or Atlas)
-- Node.js >= 18 (for some dependencies)
-- API keys for AI providers (Gemini, OpenAI, etc.)
+- **[Bun](https://bun.sh/)** >= 1.0 (recommended) or **Node.js** >= 18
+- **[MongoDB](https://www.mongodb.com/)** — Local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- **FFmpeg** — Required for video export. The backend uses the `ffmpeg` and `ffprobe` CLI tools to render the final video. Install so that both are on your `PATH` (e.g. `brew install ffmpeg` on macOS, `apt install ffmpeg` on Ubuntu).
+- **API keys** for at least one AI provider (e.g. Google Gemini, OpenAI, Anthropic)
 
 ## Installation
 
-### Using Bun (recommended)
+### 1. Clone and install
 
 ```bash
 git clone <repository-url>
 cd AutoVio
 bun install
+```
+
+If you use npm: `npm install`
+
+### 2. Install FFmpeg
+
+FFmpeg (and `ffprobe`) is required for video export. Install so both are on your `PATH`:
+
+- **macOS (Homebrew):** `brew install ffmpeg`
+- **Ubuntu/Debian:** `sudo apt update && sudo apt install ffmpeg`
+- **Windows:** Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use Chocolatey: `choco install ffmpeg`
+
+Verify with `ffmpeg -version` and `ffprobe -version`.
+
+### 3. Configure environment
+
+Copy the example environment file and set at least `MONGODB_URI` and `JWT_SECRET`. See the Configuration section below for all variables.
+
+### 4. Run the application
+
+```bash
+bun run dev
 ```
 
 ### Using Docker
@@ -118,14 +140,14 @@ bun run dev:frontend  # frontend only
 
 ## API
 
-OpenAPI documentation is available at `/api/docs` when the backend is running.
+OpenAPI documentation is available at **`/api/docs`** when the backend is running.
 
-Key endpoints:
+Key areas:
 
-- `POST /api/scenario` - Generate video scenario with LLM
-- `POST /api/generate/image` - Generate images from prompts
-- `POST /api/generate/video` - Convert images to video
-- `POST /api/analyze` - Analyze reference videos
+- **Projects & works** — Create projects, create works per project, manage style guide and assets
+- **AI** — `POST /api/analyze` (reference video analysis), `POST /api/scenario` (scenario generation), `POST /api/generate/image`, `POST /api/generate/video`
+- **Export** — `POST /api/export` (render final video from timeline, overlays, and audio; requires FFmpeg)
+- **Templates & assets** — Project-level templates and asset management
 
 ## Project Structure
 
