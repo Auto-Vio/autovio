@@ -2,6 +2,12 @@
 
 AI video generation pipeline for automating video creation. Generate videos from text prompts using LLMs, image generation models, and video synthesis APIs. Built for developers, content creators, and SaaS platforms.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Auto-Vio/autovio/main/AutoVio-Gif.gif" alt="AutoVio Demo" width="800">
+</p>
+
+📖 **[Documentation](https://auto-vio.github.io/autovio-docs/)** | 🚀 **[Quick Start](https://auto-vio.github.io/autovio-docs/getting-started/quickstart/)**
+
 ## What is AutoVio?
 
 AutoVio is an open-source text-to-video pipeline that connects multiple AI providers (Google Gemini, OpenAI, Anthropic Claude) to automate video production. It handles the full workflow: scenario writing, image generation, image-to-video conversion, and timeline editing.
