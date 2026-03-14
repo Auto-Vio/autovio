@@ -95,12 +95,13 @@ const RequestSchema = z.object({
     .object({
       tone: z.string().optional(),
       color_palette: z.array(z.string()).optional(),
-      tempo: z.enum(["fast", "medium", "slow"]).optional(),
+      tempo: z.string().optional(), // Accept any tempo string (e.g. "medium-fast")
       camera_style: z.string().optional(),
       brand_voice: z.string().optional(),
       must_include: z.array(z.string()).optional(),
       must_avoid: z.array(z.string()).optional(),
     })
+    .passthrough()
     .optional(),
 });
 
@@ -125,7 +126,7 @@ router.post("/", requireScope("ai:generate"), async (req, res, next) => {
     const scenes = await generateScenario(
       analysis ?? null,
       intent,
-      { systemPrompt: customSystemPrompt, knowledge, styleGuide },
+      { systemPrompt: customSystemPrompt, knowledge, styleGuide: styleGuide as StyleGuide | undefined },
       apiKey,
       providerId,
       modelId

@@ -9,8 +9,8 @@ export interface StyleGuide {
   tone?: string;
   /** Hex color codes, e.g. ["#FF5733", "#33C3FF"] */
   color_palette?: string[];
-  /** Pacing of the video */
-  tempo?: "fast" | "medium" | "slow";
+  /** Pacing of the video, e.g. "fast", "medium", "slow", "medium-fast" */
+  tempo?: string;
   /** Camera movement preferences */
   camera_style?: string;
   /** Brand communication tone */
@@ -31,16 +31,11 @@ export interface StyleGuide {
 export function styleGuideFromAnalysis(
   analysis: AnalysisResult
 ): Partial<StyleGuide> {
-  const tempoLower = analysis.tempo?.toLowerCase();
-  const tempo: StyleGuide["tempo"] =
-    tempoLower === "fast" || tempoLower === "medium" || tempoLower === "slow"
-      ? tempoLower
-      : undefined;
   return {
     tone: analysis.overall_tone,
     color_palette:
       analysis.color_palette?.length > 0 ? analysis.color_palette : undefined,
-    tempo,
+    tempo: analysis.tempo || undefined,
     camera_style: analysis.scenes?.[0]?.camera_movement || undefined,
   };
 }

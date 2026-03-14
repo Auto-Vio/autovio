@@ -21,8 +21,8 @@ export function buildVideoStylePrefix(guide: StyleGuide): string {
 
 function tempoToMotion(tempo: string): string {
   const t = tempo.toLowerCase();
-  if (t === "fast") return "quick motion, dynamic camera movement";
-  if (t === "slow") return "slow motion, smooth camera movement";
+  if (t.includes("fast")) return "quick motion, dynamic camera movement";
+  if (t.includes("slow")) return "slow motion, smooth camera movement";
   return "steady camera movement";
 }
 

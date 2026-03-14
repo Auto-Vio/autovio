@@ -51,12 +51,13 @@ const StyleGuideSchema = z
   .object({
     tone: z.string().optional(),
     color_palette: z.array(z.string()).optional(),
-    tempo: z.enum(["fast", "medium", "slow"]).optional(),
+    tempo: z.string().optional(), // Accept any string, validate to enum in code if needed
     camera_style: z.string().optional(),
     brand_voice: z.string().optional(),
     must_include: z.array(z.string()).optional(),
     must_avoid: z.array(z.string()).optional(),
   })
+  .passthrough()
   .optional();
 
 const ImageRequestSchema = z.object({
@@ -217,6 +218,8 @@ router.post("/image", requireScope("ai:generate"), async (req, res, next) => {
       res.status(400).json({ error: "API key required (x-api-key header)" });
       return;
     }
+
+    console.log("[generate/image] raw body:", JSON.stringify(req.body, null, 2));
 
     const { prompt, negative_prompt, image_instruction, styleGuide } =
       ImageRequestSchema.parse(req.body);

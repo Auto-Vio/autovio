@@ -62,7 +62,7 @@ function toneToVisualStyle(tone: string): string {
 
 function tempoToComposition(tempo: string): string {
   const t = tempo.toLowerCase();
-  if (t === "fast") return "dynamic framing, bold composition";
-  if (t === "slow") return "steady composition, balanced framing";
+  if (t.includes("fast")) return "dynamic framing, bold composition";
+  if (t.includes("slow")) return "steady composition, balanced framing";
   return "balanced, natural composition";
 }
