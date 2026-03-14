@@ -73,9 +73,9 @@ ${intent.video_duration ? `Target total video duration: ${intent.video_duration}
 ${intent.scene_count ? `Create exactly ${intent.scene_count} scenes.` : ""}
 
 ## Output Format
-Return a JSON array of scenes in order. The array is a single sequence: scene at index 1 continues from the scene at index 0, and so on. Each element must have:
+Return a JSON array of scenes in order. Use 0-based indexing: first scene has scene_index: 0, second has scene_index: 1, etc. The array is a single sequence: each scene continues from the previous one. Each element must have:
 {
-  "scene_index": <number>,
+  "scene_index": <number starting from 0>,
   "duration_seconds": <number> (length of this scene in seconds; all scenes' duration_seconds should add up to the target total if one was given),
   "image_prompt": "<detailed prompt for image generation>",
   "negative_prompt": "<what to avoid>",

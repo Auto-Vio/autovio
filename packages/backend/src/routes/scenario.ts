@@ -83,7 +83,13 @@ ${options.selectedAssets.map((a, i) => `${i + 1}. ${a.name}${a.description ? `: 
     throw new Error(`Failed to parse LLM response as valid JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
   }
   
-  return z.array(ScenarioSceneSchema).parse(raw);
+  const parsed = z.array(ScenarioSceneSchema).parse(raw);
+  
+  // Normalize scene_index to 0-based (LLM often returns 1-based)
+  return parsed.map((scene, i) => ({
+    ...scene,
+    scene_index: i, // Force 0-based indexing
+  }));
 }
 
 const RequestSchema = z.object({

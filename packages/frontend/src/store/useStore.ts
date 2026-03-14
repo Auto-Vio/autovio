@@ -5,6 +5,46 @@ import type { WorkSnapshot, EditorStateSnapshot, EditorTemplateMeta } from "@aut
 import * as projectStorage from "../storage/projectStorage";
 import { getAuthToken } from "./useAuthStore";
 
+/**
+ * Normalize editor state and generated scenes to 0-based indexing.
+ * Fixes legacy works where LLM returned 1-based scene_index.
+ * 
+ * Strategy: If all indexes are >= 1, shift everything down by 1.
+ */
+function normalizeEditorStateIndexes(state: EditorStateSnapshot, generatedScenes: GeneratedScene[]): EditorStateSnapshot {
+  const videoTrack = state.editorData.videoTrack || [];
+  if (videoTrack.length === 0 && generatedScenes.length === 0) return state;
+  
+  // Check if this looks like 1-based indexing
+  const allIndexes = [
+    ...videoTrack.map(a => a.sceneIndex ?? 0),
+    ...generatedScenes.map(s => s.sceneIndex),
+  ];
+  
+  const minIndex = Math.min(...allIndexes);
+  const is1Based = minIndex >= 1 && allIndexes.length > 0;
+  
+  if (!is1Based) return state; // Already 0-based
+  
+  console.log(`🔄 [LOAD WORK] Converting 1-based indexes to 0-based (minIndex=${minIndex})`);
+  
+  return {
+    ...state,
+    editorData: {
+      ...state.editorData,
+      videoTrack: videoTrack.map(action => ({
+        ...action,
+        sceneIndex: (action.sceneIndex ?? 1) - 1,
+      })),
+      textTrack: state.editorData.textTrack,
+      imageTrack: state.editorData.imageTrack,
+      audioTrack: state.editorData.audioTrack,
+    },
+    audioVolume: state.audioVolume,
+    exportSettings: state.exportSettings,
+  };
+}
+
 export type PipelineStep = 0 | 1 | 2 | 3 | 4;
 
 export interface GeneratedScene {
@@ -340,9 +380,9 @@ export const useStore = create<AppState>((set, get) => ({
       selectedAssetIds: work.selectedAssetIds ?? [],
       assetUsageMode: work.assetUsageMode,
       analysis: work.analysis,
-      scenes: work.scenes,
-      generatedScenes: work.generatedScenes.map((s) => ({ ...s })),
-      editorState: work.editorState,
+      scenes: work.scenes.map((s, i) => ({ ...s, scene_index: i })), // Force 0-based
+      generatedScenes: work.generatedScenes.map((s, i) => ({ ...s, sceneIndex: i })), // Force 0-based
+      editorState: work.editorState ? normalizeEditorStateIndexes(work.editorState, work.generatedScenes) : undefined,
       videoFile: null,
       analysisLoading: false,
       analysisError: null,
