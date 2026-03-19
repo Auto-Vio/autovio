@@ -171,6 +171,10 @@ bun run dev
 
 ## MCP Server
 
+<p align="center">
+  <img src="./autovio-mcp-demo.gif" alt="AutoVio MCP Demo" width="800">
+</p>
+
 The [`autovio-mcp`](https://github.com/Auto-Vio/autovio-mcp) package ships a full MCP server with 25+ tools covering the entire AutoVio API. Connect it to Claude Code, Claude Desktop, Cursor, or any MCP-compatible client and generate videos through conversation.
 
 **Claude Code:**
