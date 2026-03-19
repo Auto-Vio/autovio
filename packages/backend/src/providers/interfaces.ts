@@ -35,6 +35,7 @@ export interface IImageProvider {
     negativePrompt: string,
     apiKey: string,
     modelId?: string,
+    resolution?: { width: number; height: number },
   ): Promise<string>;
 }
 
@@ -48,5 +49,6 @@ export interface IVideoProvider {
     duration: number,
     apiKey: string,
     modelId?: string,
+    resolution?: { width: number; height: number },
   ): Promise<string>;
 }

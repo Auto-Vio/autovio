@@ -140,7 +140,7 @@ async function parseErrorResponse(res: Response): Promise<string> {
 export async function generateImage(
   prompt: string,
   negativePrompt: string,
-  options?: { imageInstruction?: string; styleGuide?: StyleGuide },
+  options?: { imageInstruction?: string; styleGuide?: StyleGuide; resolution?: { width: number; height: number } },
 ): Promise<string> {
   const headers = getHeaders("image");
 
@@ -158,6 +158,7 @@ export async function generateImage(
       negative_prompt: negativePrompt,
       image_instruction: options?.imageInstruction?.trim() || undefined,
       styleGuide: options?.styleGuide,
+      resolution: options?.resolution,
     }),
   });
 
@@ -175,7 +176,7 @@ export async function generateVideo(
   imageUrl: string,
   prompt: string,
   duration: number,
-  options?: { videoInstruction?: string; styleGuide?: StyleGuide },
+  options?: { videoInstruction?: string; styleGuide?: StyleGuide; resolution?: { width: number; height: number } },
 ): Promise<string> {
   const headers = getHeaders("video");
 
@@ -194,6 +195,7 @@ export async function generateVideo(
       duration,
       video_instruction: options?.videoInstruction?.trim() || undefined,
       styleGuide: options?.styleGuide,
+      resolution: options?.resolution,
     }),
   });
 

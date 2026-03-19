@@ -238,6 +238,7 @@ export default function EditorStep() {
     templates,
     templatesLoading,
     loadTemplates,
+    resolution,
   } = useStore();
   const addToast = useToastStore((s) => s.addToast);
 
@@ -284,9 +285,9 @@ export default function EditorStep() {
       ...initialFromScenes,
       textOverlays,
       imageOverlays,
-      exportSettings: savedEditorState?.exportSettings ?? { width: 1080, height: 1920, fps: 30 } as ExportSettings,
+      exportSettings: savedEditorState?.exportSettings ?? { width: resolution.width, height: resolution.height, fps: 30 } as ExportSettings,
     };
-  }, [savedEditorState, generatedScenes, initialFromScenes]);
+  }, [savedEditorState, generatedScenes, initialFromScenes, resolution]);
 
   const [editorData, setEditorData] = useState<TimelineRow[]>(initial.editorData);
   const [clipMeta, setClipMeta] = useState<ClipMetaMap>(initial.clipMeta);

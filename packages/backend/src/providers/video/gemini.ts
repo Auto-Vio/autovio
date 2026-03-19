@@ -17,6 +17,7 @@ export class GeminiVideoProvider implements IVideoProvider {
     duration: number,
     apiKey: string,
     modelId = "veo-3.0-generate-001",
+    resolution?: { width: number; height: number },
   ): Promise<string> {
     const ai = new GoogleGenAI({ apiKey });
 
@@ -43,13 +44,21 @@ export class GeminiVideoProvider implements IVideoProvider {
       Math.abs(curr - duration) < Math.abs(prev - duration) ? curr : prev,
     );
 
-    console.log(`[veo] Starting video generation with model=${modelId} duration=${durationSeconds}s`);
+    let aspectRatio: string | undefined;
+    if (resolution) {
+      const { width, height } = resolution;
+      if (height > width) aspectRatio = "9:16";
+      else if (width > height) aspectRatio = "16:9";
+      else aspectRatio = "1:1";
+    }
+
+    console.log(`[veo] Starting video generation with model=${modelId} duration=${durationSeconds}s${aspectRatio ? ` aspectRatio=${aspectRatio}` : ""}`);
 
     let operation = await ai.models.generateVideos({
       model: modelId,
       prompt: fullPrompt,
       image: { imageBytes, mimeType },
-      config: { numberOfVideos: 1, durationSeconds },
+      config: { numberOfVideos: 1, durationSeconds, ...(aspectRatio && { aspectRatio }) },
     });
 
     // Poll until done

@@ -335,6 +335,8 @@ export interface WorkSnapshot {
   selectedAssetIds?: string[];
   /** How to use selected assets in generation */
   assetUsageMode?: AssetUsageMode;
+  /** Output resolution for image/video generation and export */
+  resolution?: { width: number; height: number };
 }
 
 /** Çalışma listesi için meta. */

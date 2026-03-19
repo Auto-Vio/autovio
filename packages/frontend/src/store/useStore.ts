@@ -105,6 +105,7 @@ interface AppState {
   sceneCount: number | undefined;
   selectedAssetIds: string[];
   assetUsageMode: AssetUsageMode | undefined;
+  resolution: { width: number; height: number };
   setVideoFile: (file: File | null) => void;
   setHasReferenceVideo: (has: boolean) => void;
   setMode: (mode: "style_transfer" | "content_remix") => void;
@@ -116,6 +117,7 @@ interface AppState {
   setSceneCount: (n: number | undefined) => void;
   setSelectedAssetIds: (ids: string[]) => void;
   setAssetUsageMode: (mode: AssetUsageMode | undefined) => void;
+  setResolution: (resolution: { width: number; height: number }) => void;
 
   // Step 1 — Analysis
   analysis: AnalysisResult | null;
@@ -203,6 +205,7 @@ const initialState = {
   sceneCount: undefined as number | undefined,
   selectedAssetIds: [] as string[],
   assetUsageMode: undefined as AssetUsageMode | undefined,
+  resolution: { width: 1080, height: 1920 } as { width: number; height: number },
   analysis: null as AnalysisResult | null,
   analysisLoading: false,
   analysisError: null as string | null,
@@ -236,6 +239,7 @@ type PersistableState = Pick<
   | "sceneCount"
   | "selectedAssetIds"
   | "assetUsageMode"
+  | "resolution"
   | "analysis"
   | "scenes"
   | "generatedScenes"
@@ -271,6 +275,7 @@ function buildWorkSnapshot(
     sceneCount: state.sceneCount,
     selectedAssetIds: state.selectedAssetIds,
     assetUsageMode: state.assetUsageMode,
+    resolution: state.resolution,
     analysis: state.analysis,
     scenes: state.scenes,
     generatedScenes: state.generatedScenes.map(({ sceneIndex, status, error }) => ({
@@ -379,6 +384,7 @@ export const useStore = create<AppState>((set, get) => ({
       sceneCount: work.sceneCount,
       selectedAssetIds: work.selectedAssetIds ?? [],
       assetUsageMode: work.assetUsageMode,
+      resolution: work.resolution ?? { width: 1080, height: 1920 },
       analysis: work.analysis,
       scenes: work.scenes.map((s, i) => ({ ...s, scene_index: i })), // Force 0-based
       generatedScenes: work.generatedScenes.map((s, i) => ({ ...s, sceneIndex: i })), // Force 0-based
@@ -441,7 +447,8 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   createNewWork: async (projectId, name) => {
-    const work = await projectStorage.createWork(projectId, name ?? "New Work");
+    const { resolution } = get();
+    const work = await projectStorage.createWork(projectId, name ?? "New Work", { resolution });
     await get().loadWork(projectId, work.id);
   },
 
@@ -514,6 +521,10 @@ export const useStore = create<AppState>((set, get) => ({
   setAssetUsageMode: (assetUsageMode) => {
     console.log('[Store] setAssetUsageMode:', assetUsageMode);
     set({ assetUsageMode });
+    get().persistCurrentWork();
+  },
+  setResolution: (resolution) => {
+    set({ resolution });
     get().persistCurrentWork();
   },
 
@@ -613,7 +624,7 @@ export const useStore = create<AppState>((set, get) => ({
     const state = get();
     const scene = state.scenes[sceneIndex];
     if (!scene) return;
-    const { currentProjectId, currentWorkId, workImageSystemPrompt, projectImageSystemPrompt, assetUsageMode, selectedAssetIds } =
+    const { currentProjectId, currentWorkId, workImageSystemPrompt, projectImageSystemPrompt, assetUsageMode, selectedAssetIds, resolution } =
       state;
     
     try {
@@ -661,6 +672,7 @@ export const useStore = create<AppState>((set, get) => ({
         {
           ...(imageInstruction ? { imageInstruction } : {}),
           ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+          resolution,
         },
       );
       const imageUrlForUi =
@@ -690,7 +702,7 @@ export const useStore = create<AppState>((set, get) => ({
     const scene = state.scenes[sceneIndex];
     const gs = state.generatedScenes[sceneIndex];
     if (!scene || !gs || gs.status !== "image_ready") return;
-    const { currentProjectId, currentWorkId, workVideoSystemPrompt, projectVideoSystemPrompt, assetUsageMode } =
+    const { currentProjectId, currentWorkId, workVideoSystemPrompt, projectVideoSystemPrompt, assetUsageMode, resolution } =
       state;
 
     try {
@@ -749,6 +761,7 @@ export const useStore = create<AppState>((set, get) => ({
         {
           ...(videoInstruction ? { videoInstruction } : {}),
           ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+          resolution,
         },
       );
       let videoUrlForUi = remoteVideoUrl;
@@ -793,7 +806,7 @@ export const useStore = create<AppState>((set, get) => ({
     const scene = state.scenes[sceneIndex];
     const gs = state.generatedScenes[sceneIndex];
     if (!scene || !gs) return;
-    const { currentProjectId, currentWorkId, workVideoSystemPrompt, projectVideoSystemPrompt } =
+    const { currentProjectId, currentWorkId, workVideoSystemPrompt, projectVideoSystemPrompt, resolution } =
       state;
     const imageUrlForVideo =
       gs.remoteImageUrl ??
@@ -820,6 +833,7 @@ export const useStore = create<AppState>((set, get) => ({
         {
           ...(videoInstruction ? { videoInstruction } : {}),
           ...(state.projectStyleGuide ? { styleGuide: state.projectStyleGuide } : {}),
+          resolution,
         },
       );
       let videoUrlForUi = remoteVideoUrl;

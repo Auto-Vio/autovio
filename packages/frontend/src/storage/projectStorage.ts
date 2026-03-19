@@ -237,11 +237,11 @@ export async function saveWork(projectId: string, snapshot: WorkSnapshot): Promi
   if (!res.ok) throw new Error("Failed to save work");
 }
 
-export async function createWork(projectId: string, name?: string): Promise<WorkSnapshot> {
+export async function createWork(projectId: string, name?: string, options?: { resolution?: { width: number; height: number } }): Promise<WorkSnapshot> {
   const res = await fetch(`${API}/${projectId}/works`, {
     method: "POST",
     headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-    body: JSON.stringify({ name: name || "New Work" }),
+    body: JSON.stringify({ name: name || "New Work", ...options }),
   });
   if (!res.ok) throw new Error("Failed to create work");
   return res.json();

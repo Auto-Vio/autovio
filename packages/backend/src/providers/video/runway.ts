@@ -15,8 +15,17 @@ export class RunwayProvider implements IVideoProvider {
     duration: number,
     apiKey: string,
     modelId = "gen3a_turbo",
+    resolution?: { width: number; height: number },
   ): Promise<string> {
     const durationSeconds = Math.min(10, Math.max(2, Math.round(duration)));
+
+    let ratio: string | undefined;
+    if (resolution) {
+      const { width, height } = resolution;
+      if (height > width) ratio = "768:1280";
+      else if (width > height) ratio = "1280:768";
+    }
+
     const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
       method: "POST",
       headers: {
@@ -29,6 +38,7 @@ export class RunwayProvider implements IVideoProvider {
         promptImage: imageUrl,
         promptText: prompt,
         duration: durationSeconds,
+        ...(ratio && { ratio }),
       }),
     });
 

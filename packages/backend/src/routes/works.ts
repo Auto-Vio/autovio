@@ -44,7 +44,7 @@ function getWorkId(req: Request): string {
   return String((req.params as { workId?: string }).workId ?? "");
 }
 
-function defaultEditorState(): EditorStateSnapshot {
+function defaultEditorState(resolution?: { width: number; height: number }): EditorStateSnapshot {
   return {
     editorData: {
       videoTrack: [],
@@ -55,7 +55,11 @@ function defaultEditorState(): EditorStateSnapshot {
     textOverlays: {},
     imageOverlays: {},
     audioVolume: 1,
-    exportSettings: { width: 1080, height: 1920, fps: 30 },
+    exportSettings: {
+      width: resolution?.width ?? 1080,
+      height: resolution?.height ?? 1920,
+      fps: 30,
+    },
   };
 }
 
@@ -105,6 +109,7 @@ router.post("/", requireScope("works:write"), async (req, res, next) => {
     }
     const body = req.body ?? {};
     const name = (body.name as string) || "Yeni Çalışma";
+    const resolution = body.resolution as { width: number; height: number } | undefined;
     const work = await createWork(projectId, name, {
       mode: body.mode,
       productName: body.productName,
@@ -113,6 +118,7 @@ router.post("/", requireScope("works:write"), async (req, res, next) => {
       language: body.language,
       videoDuration: body.videoDuration,
       sceneCount: body.sceneCount,
+      resolution,
     });
     res.status(201).json(work);
   } catch (e) {
@@ -263,6 +269,7 @@ router.post("/:workId/generate/scene/:sceneIndex", requireScope("ai:generate"), 
         selectedAssets,
         sceneIndex,
         projectId,
+        resolution: work.resolution,
       },
     );
 
@@ -387,7 +394,7 @@ router.post("/:workId/apply-template", requireScope("works:write"), async (req, 
         : undefined) ??
       10;
     const result = applyTemplateLogic(template, videoDuration, body.placeholderValues);
-    const baseEditorState = work.editorState ?? defaultEditorState();
+    const baseEditorState = work.editorState ?? defaultEditorState(work.resolution);
     const mergedEditorState = mergeTemplateIntoEditorState(baseEditorState, result);
     const updatedWork: WorkSnapshot = {
       ...work,

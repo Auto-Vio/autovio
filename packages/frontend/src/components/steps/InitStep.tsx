@@ -31,9 +31,16 @@ export default function InitStep() {
     sceneCount, setSceneCount,
     selectedAssetIds, setSelectedAssetIds,
     assetUsageMode, setAssetUsageMode,
+    resolution, setResolution,
     setStep, setShowSettings,
     currentProjectId, currentWorkId,
   } = useStore();
+
+  const RESOLUTION_PRESETS = [
+    { label: "Portrait 9:16", width: 1080, height: 1920, icon: "📱" },
+    { label: "Landscape 16:9", width: 1920, height: 1080, icon: "🖥️" },
+    { label: "Square 1:1", width: 1080, height: 1080, icon: "⬛" },
+  ] as const;
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [optionalOpen, setOptionalOpen] = useState(false);
@@ -258,6 +265,31 @@ export default function InitStep() {
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:border-purple-500 focus:outline-none"
             placeholder="e.g., Young athletes aged 18-25"
           />
+        </div>
+      </div>
+
+      {/* Resolution Selector */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-300">Resolution</label>
+        <div className="grid grid-cols-3 gap-3">
+          {RESOLUTION_PRESETS.map((preset) => {
+            const isSelected = resolution.width === preset.width && resolution.height === preset.height;
+            return (
+              <button
+                key={preset.label}
+                onClick={() => setResolution({ width: preset.width, height: preset.height })}
+                className={`p-3 rounded-lg border text-center transition-colors ${
+                  isSelected
+                    ? "border-purple-500 bg-purple-500/10"
+                    : "border-gray-700 hover:border-gray-600"
+                }`}
+              >
+                <span className="text-xl block mb-1">{preset.icon}</span>
+                <p className="font-medium text-sm">{preset.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{preset.width}×{preset.height}</p>
+              </button>
+            );
+          })}
         </div>
       </div>
 

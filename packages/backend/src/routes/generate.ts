@@ -60,11 +60,14 @@ const StyleGuideSchema = z
   .passthrough()
   .optional();
 
+const ResolutionSchema = z.object({ width: z.number(), height: z.number() }).optional();
+
 const ImageRequestSchema = z.object({
   prompt: z.string(),
   negative_prompt: z.string().default(""),
   image_instruction: z.string().optional(),
   styleGuide: StyleGuideSchema,
+  resolution: ResolutionSchema,
 });
 
 const VideoRequestSchema = z.object({
@@ -73,6 +76,7 @@ const VideoRequestSchema = z.object({
   duration: z.number().default(5),
   video_instruction: z.string().optional(),
   styleGuide: StyleGuideSchema,
+  resolution: ResolutionSchema,
 });
 
 /** Validate modelId against provider's supported models, fallback to first if invalid */
@@ -112,6 +116,7 @@ export interface GenerateSceneImageAndVideoOptions {
   selectedAssets?: ProjectAsset[];
   sceneIndex?: number;
   projectId?: string;
+  resolution?: { width: number; height: number };
 }
 
 /**
@@ -135,6 +140,7 @@ export async function generateSceneImageAndVideo(
     selectedAssets,
     sceneIndex,
     projectId,
+    resolution,
   } = options;
 
   let imageUrl: string;
@@ -181,6 +187,7 @@ export async function generateSceneImageAndVideo(
       scene.negative_prompt ?? "",
       apiKey,
       imgModel,
+      resolution,
     );
   }
 
@@ -203,6 +210,7 @@ export async function generateSceneImageAndVideo(
     duration,
     apiKey,
     vidModel,
+    resolution,
   );
 
   return { imageUrl, videoUrl };
@@ -221,7 +229,7 @@ router.post("/image", requireScope("ai:generate"), async (req, res, next) => {
 
     console.log("[generate/image] raw body:", JSON.stringify(req.body, null, 2));
 
-    const { prompt, negative_prompt, image_instruction, styleGuide } =
+    const { prompt, negative_prompt, image_instruction, styleGuide, resolution } =
       ImageRequestSchema.parse(req.body);
     const provider = getImageProvider(providerId);
     const modelId = resolveModelId(rawModelId, provider.models);
@@ -239,7 +247,7 @@ router.post("/image", requireScope("ai:generate"), async (req, res, next) => {
     console.log("[generate/image] full prompt:\n", fullPrompt);
     if (negative_prompt) console.log("[generate/image] negative_prompt:\n", negative_prompt);
 
-    const imageUrl = await provider.generate(fullPrompt, negative_prompt, apiKey, modelId);
+    const imageUrl = await provider.generate(fullPrompt, negative_prompt, apiKey, modelId, resolution);
 
     console.log(`[generate/image] success, url length=${imageUrl.length}`);
     res.json({ imageUrl });
@@ -259,7 +267,7 @@ router.post("/video", requireScope("ai:generate"), async (req, res, next) => {
       return;
     }
 
-    const { image_url, prompt, duration, video_instruction, styleGuide } =
+    const { image_url, prompt, duration, video_instruction, styleGuide, resolution } =
       VideoRequestSchema.parse(req.body);
     const provider = getVideoProvider(providerId);
     const modelId = resolveModelId(rawModelId, provider.models);
@@ -279,7 +287,7 @@ router.post("/video", requireScope("ai:generate"), async (req, res, next) => {
     console.log(`[generate/video] provider=${providerId} model=${modelId} duration=${duration}s`);
     console.log("[generate/video] full prompt:\n", fullPrompt);
 
-    const videoUrl = await provider.convert(resolvedImageUrl, fullPrompt, duration, apiKey, modelId);
+    const videoUrl = await provider.convert(resolvedImageUrl, fullPrompt, duration, apiKey, modelId, resolution);
 
     console.log(`[generate/video] success, url length=${videoUrl.length}`);
     res.json({ videoUrl });

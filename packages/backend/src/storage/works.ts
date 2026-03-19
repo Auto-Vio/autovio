@@ -77,6 +77,7 @@ export async function saveWork(projectId: string, snapshot: WorkSnapshot): Promi
       sceneCount: snapshot.sceneCount,
       selectedAssetIds: snapshot.selectedAssetIds ?? [],
       assetUsageMode: snapshot.assetUsageMode,
+      resolution: snapshot.resolution,
       analysis: snapshot.analysis,
       scenes: snapshot.scenes,
       generatedScenes: snapshot.generatedScenes,
@@ -94,6 +95,7 @@ export interface CreateWorkOptions {
   language?: string;
   videoDuration?: number;
   sceneCount?: number;
+  resolution?: { width: number; height: number };
 }
 
 export async function createWork(
@@ -125,6 +127,7 @@ export async function createWork(
     language: options?.language ?? "",
     videoDuration: options?.videoDuration,
     sceneCount: options?.sceneCount,
+    resolution: options?.resolution,
     analysis: null,
     scenes: [],
     generatedScenes: [],

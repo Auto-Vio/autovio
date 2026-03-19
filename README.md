@@ -1,85 +1,136 @@
-# AutoVio
-
-AI video generation pipeline for automating video creation. Generate videos from text prompts using LLMs, image generation models, and video synthesis APIs. Built for developers, content creators, and SaaS platforms.
-
 <p align="center">
   <img src="./AutoVio-Gif.gif" alt="AutoVio Demo" width="800">
 </p>
 
+<h1 align="center">AutoVio</h1>
+
 <p align="center">
-  <a href="https://auto-vio.github.io/autovio-docs/"><strong>📖 Documentation</strong></a> ·
+  <strong>Open-source AI video generation pipeline.</strong><br>
+  From a text prompt to a finished video — scenario, images, clips, editing, export.
+</p>
+
+<p align="center">
+  <a href="https://auto-vio.github.io/autovio-docs/"><strong>📖 Docs</strong></a> ·
   <a href="https://auto-vio.github.io/autovio-docs/getting-started/quickstart/"><strong>🚀 Quick Start</strong></a> ·
-  <a href="https://auto-vio.github.io/autovio-docs/api/overview/"><strong>📡 API Reference</strong></a> ·
+  <a href="https://auto-vio.github.io/autovio-docs/api/overview/"><strong>📡 API</strong></a> ·
   <a href="https://auto-vio.github.io/autovio-docs/mcp/overview/"><strong>🤖 MCP Server</strong></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue" alt="License">
-  <img src="https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React">
-  <img src="https://img.shields.io/badge/Express-4-000000?logo=express" alt="Express">
-  <img src="https://img.shields.io/badge/MongoDB-6-47A248?logo=mongodb" alt="MongoDB">
+  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React">
+  <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/MongoDB-6-47A248?logo=mongodb&logoColor=white" alt="MongoDB">
+  <img src="https://img.shields.io/badge/MCP-compatible-7C3AED" alt="MCP">
 </p>
+
+---
 
 ## What is AutoVio?
 
-AutoVio is an open-source text-to-video pipeline that connects multiple AI providers (Google Gemini, OpenAI, Anthropic Claude) to automate video production. It handles the full workflow: scenario writing, image generation, image-to-video conversion, and timeline editing.
+Most AI tools handle one step of video creation. AutoVio handles the whole thing.
 
-## Features
+You describe what you want — a product, an idea, a story. AutoVio writes the scene-by-scene scenario, generates an image for each scene, animates those images into video clips, and assembles everything in a timeline editor. You export a finished MP4.
 
-- **Text to video generation** - Create videos from text descriptions
-- **AI video editing** - Automated scene composition with overlays
-- **Reference video analysis** - Analyze existing videos with vision AI to replicate styles
-- **Scene-by-scene scenario generation** - LLM-powered scriptwriting
-- **AI image generation** - Generate visuals for each scene (Gemini, DALL-E, etc.)
-- **Image to video conversion** - Convert images to video clips (Veo, Runway, etc.)
-- **Video timeline editor** - Add text overlays, image overlays, transitions
-- **Template system** - Reusable overlay compositions for branding
-- **Multi-provider support** - Gemini, OpenAI, Claude, and more
-- **REST API** - Full OpenAPI documentation for integration
-- **MCP server** - Model Context Protocol support for AI assistants
+The entire pipeline runs on your own infrastructure. You bring your own API keys. You own the output.
+
+```
+Text prompt  →  Scenario (LLM)  →  Images (Gemini / DALL-E)  →  Video clips (Veo / Runway)  →  Edit  →  Export
+```
+
+---
+
+## The Pipeline
+
+AutoVio breaks video production into five steps that mirror how a human team would work:
+
+| Step | What happens |
+|------|-------------|
+| **1 · Init** | Set your subject, audience, resolution, mode, and optional reference assets |
+| **2 · Analyze** | Upload a reference video — vision AI extracts style, tone, pacing, and colors |
+| **3 · Scenario** | LLM writes a scene-by-scene script with image prompts, video prompts, and transitions |
+| **4 · Generate** | Each scene gets an AI-generated image, then that image is animated into a video clip |
+| **5 · Editor** | Arrange clips on a timeline, add text/image overlays, set transitions, mix audio, export |
+
+Two generation modes:
+- **Style Transfer** — Replicate the visual style of an existing video on new content
+- **Content Remix** — Build from scratch using a project style guide and your prompts
+
+---
+
+## Key Features
+
+- **Full end-to-end pipeline** — one system from idea to exported MP4
+- **Multi-provider AI** — mix and match LLMs, image models, and video models per project
+- **Reference video analysis** — vision AI decodes style, tempo, and composition from any video
+- **Project style guides** — lock in brand voice, color palette, camera style, and tone once; apply across all videos
+- **Asset library** — upload product photos, logos, or screenshots; use them directly in videos or as style references
+- **Timeline editor** — text overlays, image overlays, transitions, audio mixing, frame-accurate trimming
+- **Template system** — save overlay compositions as reusable templates across works
+- **Resolution control** — Portrait 9:16, Landscape 16:9, or Square 1:1; each provider gets the right format automatically
+- **REST API + OpenAPI** — every feature is accessible programmatically
+- **MCP server** — use AutoVio from Claude Code, Cursor, Claude Desktop, or any MCP client
+- **Self-hosted** — runs on your machine or your server; no data leaves without your API keys
+
+---
+
+## AI Providers
+
+AutoVio is provider-agnostic. Configure different providers for each role:
+
+| Role | Supported providers |
+|------|-------------------|
+| **LLM (scenario)** | Google Gemini, OpenAI, Anthropic Claude |
+| **Vision (analysis)** | Google Gemini |
+| **Image generation** | Google Gemini Image, OpenAI DALL-E 3 |
+| **Video generation** | Google Veo, Runway Gen-3 |
+
+New providers can be added by implementing the `IImageProvider` or `IVideoProvider` interface.
+
+---
 
 ## Use Cases
 
-### AI Coding Assistants
+### Developers & AI Coding Assistants
 
-Integrate with AI coding tools to generate demo videos automatically:
+AutoVio has a full MCP server. Your AI coding assistant can generate product demo videos without leaving the editor:
 
-- **Claude Code** - Generate product demo videos after implementing features
-- **Cursor** - Create tutorial videos for code changes
-- **OpenCode** - Automate video documentation for releases
-- **Aider** - Build video content alongside code
+- **Claude Code** — run `autovio_works_create` after shipping a feature
+- **Cursor** — generate tutorial videos for code changes inline
+- **Claude Desktop** — describe a video in conversation, have it built automatically
 
-### Workflow Automation
+### Automation Workflows
 
-Connect to automation platforms for scheduled video generation:
+The REST API connects to any automation platform:
 
-- **n8n** - Trigger video creation from webhooks, forms, or schedules
-- **Make (Integromat)** - Build video pipelines with drag-and-drop
-- **Zapier** - Connect to 5000+ apps for automated video workflows
+- **n8n / Make / Zapier** — trigger video generation from webhooks, CRM events, or schedules
+- **CI/CD pipelines** — auto-generate release announcement videos on every deploy
+- **Content calendars** — batch-produce social media videos from a content schedule
 
-### Mobile & Remote Access
+### Product & Marketing Teams
 
-Use MCP-compatible apps for video generation on the go:
-
-- **OpenClaw** - Generate videos from your phone
-- **Claude Desktop** - Create videos through conversation
-
-### SaaS & Product Teams
-
-- Generate product update videos automatically
+- Turn feature specs into product demo videos
+- Generate localized video variants from a single scenario
 - Create onboarding videos from documentation
-- Build marketing videos from feature specs
-- Automate social media video content
+- Maintain brand consistency across all video output with style guides
 
-## Requirements
+### Researchers & Builders
 
-- **[Bun](https://bun.sh/)** >= 1.0 (recommended) or **Node.js** >= 18
-- **[MongoDB](https://www.mongodb.com/)** — Local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-- **FFmpeg** — Required for video export. The backend uses the `ffmpeg` and `ffprobe` CLI tools to render the final video. Install so that both are on your `PATH` (e.g. `brew install ffmpeg` on macOS, `apt install ffmpeg` on Ubuntu).
-- **API keys** for at least one AI provider (e.g. Google Gemini, OpenAI, Anthropic)
+- Experiment with new AI video providers without rebuilding infrastructure
+- Use the REST API as a backend for your own video product
+- Extend the pipeline with custom providers, prompts, or export formats
 
-## Installation
+---
+
+## Quick Start
+
+### Requirements
+
+- **[Bun](https://bun.sh/)** >= 1.0 (or Node.js >= 18)
+- **[MongoDB](https://www.mongodb.com/)** — local or [Atlas](https://www.mongodb.com/cloud/atlas)
+- **FFmpeg** — for video export (`brew install ffmpeg` / `apt install ffmpeg`)
+- At least one AI provider API key (Google Gemini is free to start)
 
 ### 1. Clone and install
 
@@ -89,120 +140,111 @@ cd autovio
 bun install
 ```
 
-If you use npm: `npm install`
-
-### 2. Install FFmpeg
-
-FFmpeg (and `ffprobe`) is required for video export. Install so both are on your `PATH`:
-
-- **macOS (Homebrew):** `brew install ffmpeg`
-- **Ubuntu/Debian:** `sudo apt update && sudo apt install ffmpeg`
-- **Windows:** Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use Chocolatey: `choco install ffmpeg`
-
-Verify with `ffmpeg -version` and `ffprobe -version`.
-
-### 3. Configure environment
-
-Copy the example environment file and set at least `MONGODB_URI` and `JWT_SECRET`. See the Configuration section below for all variables.
-
-### 4. Run the application
-
-```bash
-bun run dev
-```
-
-### Using Docker
-
-> Coming soon
-
-## Configuration
-
-Copy the example environment file and edit it:
+### 2. Configure
 
 ```bash
 cp .env.example .env
+# Open .env and set MONGODB_URI and JWT_SECRET
 ```
 
-Required environment variables:
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret for JWT tokens |
+| `PORT` | No | Backend port (default: 3001) |
 
-| Variable | Description |
-|----------|-------------|
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key for JWT tokens |
-| `PORT` | Backend port (default: 3001) |
-
-Optional MongoDB credentials (if not using connection string auth):
-
-| Variable | Description |
-|----------|-------------|
-| `MONGODB_USERNAME` | Database username |
-| `MONGODB_PASSWORD` | Database password |
-| `MONGODB_DB_NAME` | Database name (default: autovio) |
-
-## Running
-
-Start both backend and frontend:
+### 3. Start
 
 ```bash
 bun run dev
 ```
 
-- Backend runs on `http://localhost:3001`
-- Frontend runs on `http://localhost:5173`
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3001`
+- OpenAPI docs: `http://localhost:3001/api/docs`
 
-Run separately:
+---
 
-```bash
-bun run dev:backend   # backend only
-bun run dev:frontend  # frontend only
+## MCP Server
+
+The [`AutoVio-MCP`](https://github.com/Auto-Vio/autovio-mcp) repo ships a full MCP server with 25+ tools covering the entire AutoVio API. Connect it to Claude Desktop, Cursor, or any MCP-compatible client and generate videos through conversation.
+
+```json
+{
+  "mcpServers": {
+    "autovio": {
+      "command": "node",
+      "args": [
+        "/path/to/AutoVio-MCP/dist/index.js",
+        "--autovio-base-url", "http://localhost:3001",
+        "--autovio-api-token", "YOUR_TOKEN",
+        "--llm-model", "gemini-2.5-flash",
+        "--llm-api-key", "YOUR_KEY",
+        "--image-model", "gemini-2.5-flash-image",
+        "--image-api-key", "YOUR_KEY",
+        "--video-model", "veo-3.0-generate-001",
+        "--video-api-key", "YOUR_KEY"
+      ]
+    }
+  }
+}
 ```
 
-## API
+See the [MCP documentation](https://auto-vio.github.io/autovio-docs/mcp/overview/) for the full setup guide and tool reference.
 
-OpenAPI documentation is available at **`/api/docs`** when the backend is running.
-
-Key areas:
-
-- **Projects & works** — Create projects, create works per project, manage style guide and assets
-- **AI** — `POST /api/analyze` (reference video analysis), `POST /api/scenario` (scenario generation), `POST /api/generate/image`, `POST /api/generate/video`
-- **Export** — `POST /api/export` (render final video from timeline, overlays, and audio; requires FFmpeg)
-- **Templates & assets** — Project-level templates and asset management
+---
 
 ## Project Structure
 
 ```
 AutoVio/
 ├── packages/
-│   ├── backend/    # Express API server
-│   ├── frontend/   # React + Vite app
-│   └── shared/     # Shared types and utilities
-└── package.json    # Workspace root
+│   ├── backend/     # Express API — routes, AI providers, FFmpeg export
+│   ├── frontend/    # React + Vite — 5-step pipeline UI, timeline editor
+│   └── shared/      # TypeScript types shared between packages
+└── package.json     # Bun/npm workspace root
 ```
 
-## MCP Server
+---
 
-An MCP (Model Context Protocol) server is available in the `AutoVio-MCP` directory for integration with:
+## Contributing
 
-- Claude Desktop
-- Cursor IDE
-- OpenClaw
-- Any MCP-compatible client
+AutoVio is at an early stage and actively evolving. Contributions are welcome in any form:
 
-See `AutoVio-MCP/README.md` for setup instructions.
+- **Bug reports** — open an issue with reproduction steps
+- **New AI providers** — implement `IImageProvider` or `IVideoProvider` and open a PR
+- **UI improvements** — the frontend is React + TailwindCSS + Zustand
+- **Documentation** — the docs site lives in [AutoVio-Docs](https://github.com/Auto-Vio/autovio-docs)
+- **Ideas and feedback** — open a discussion or issue
+
+To get started, read the [documentation](https://auto-vio.github.io/autovio-docs/) and explore the codebase. The provider interfaces in `packages/backend/src/providers/interfaces.ts` are a good entry point for adding new AI integrations.
+
+---
+
+## Repositories
+
+| Repository | Description |
+|------------|-------------|
+| [**autovio**](https://github.com/Auto-Vio/autovio) | Core platform — React frontend + Express backend |
+| [**autovio-mcp**](https://github.com/Auto-Vio/autovio-mcp) | MCP server for Claude, Cursor, and AI assistants |
+| [**autovio-docs**](https://github.com/Auto-Vio/autovio-docs) | Documentation site (Astro Starlight) |
+
+---
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `bun run dev` | Start development servers |
+| `bun run dev` | Start both backend and frontend in development mode |
+| `bun run dev:backend` | Backend only |
+| `bun run dev:frontend` | Frontend only |
 | `bun run build` | Build all packages |
-| `bun run typecheck` | Run TypeScript type checking |
+| `bun run typecheck` | Run TypeScript type checking across all packages |
 
+---
 
 ## License
 
-This project is licensed under [Polyform Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
+AutoVio is licensed under [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
-You can use, modify, and run this software for personal, educational, or non-commercial purposes. Commercial use requires a separate license agreement.
-
-For commercial licensing inquiries, please contact the maintainers.
+Free for personal, educational, and non-commercial use. For commercial use, contact the maintainers to discuss licensing.

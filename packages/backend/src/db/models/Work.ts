@@ -26,6 +26,7 @@ export interface WorkDocument {
   editorState?: EditorStateSnapshot;
   selectedAssetIds?: string[];
   assetUsageMode?: AssetUsageMode;
+  resolution?: { width: number; height: number };
 }
 
 const SceneAnalysisSchema = new Schema(
@@ -166,6 +167,10 @@ const WorkSchema = new Schema(
     editorState: { type: EditorStateSnapshotSchema },
     selectedAssetIds: [{ type: String }],
     assetUsageMode: { type: String, enum: ["reference", "direct"] },
+    resolution: {
+      width: { type: Number },
+      height: { type: Number },
+    },
   },
   {
     _id: false,
@@ -203,5 +208,6 @@ export function toWorkSnapshot(doc: WorkDocument): WorkSnapshot {
     editorState: doc.editorState as EditorStateSnapshot | undefined,
     selectedAssetIds: doc.selectedAssetIds,
     assetUsageMode: doc.assetUsageMode,
+    resolution: doc.resolution,
   };
 }

@@ -15,14 +15,23 @@ export class DallEProvider implements IImageProvider {
     _negativePrompt: string,
     apiKey: string,
     modelId = "dall-e-3",
+    resolution?: { width: number; height: number },
   ): Promise<string> {
     const client = new OpenAI({ apiKey });
+
+    let size: "1024x1024" | "1792x1024" | "1024x1792" | "512x512" = modelId === "dall-e-3" ? "1024x1024" : "512x512";
+    if (modelId === "dall-e-3" && resolution) {
+      const { width, height } = resolution;
+      if (height > width) size = "1024x1792";
+      else if (width > height) size = "1792x1024";
+      else size = "1024x1024";
+    }
 
     const response = await client.images.generate({
       model: modelId,
       prompt,
       n: 1,
-      size: modelId === "dall-e-3" ? "1024x1024" : "512x512",
+      size,
       quality: modelId === "dall-e-3" ? "hd" : "standard",
     });
 
