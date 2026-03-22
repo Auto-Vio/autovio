@@ -9,7 +9,7 @@
 <h1 align="center">AutoVio</h1>
 
 <p align="center">
-  <strong>Open-source AI video generation pipeline.</strong><br>
+  <strong>Open-source AI video generation pipeline for SaaS teams and developers.</strong><br>
   From a text prompt to a finished video — scenario, images, clips, editing, export.
 </p>
 
@@ -35,7 +35,7 @@
 
 Most AI tools handle one step of video creation. AutoVio handles the whole thing.
 
-You describe what you want — a product, an idea, a story. AutoVio writes the scene-by-scene scenario, generates an image for each scene, animates those images into video clips, and assembles everything in a timeline editor. You export a finished MP4.
+You describe what you want — a product, an idea, a story. AutoVio writes the scene-by-scene scenario, generates an image for each scene, animates those images into video clips, and assembles everything in a timeline editor. You export a finished MP4. Especially useful for SaaS product demos, feature announcements, and marketing videos.
 
 The entire pipeline runs on your own infrastructure. You bring your own API keys. You own the output.
 
@@ -112,11 +112,12 @@ The REST API connects to any automation platform:
 - **CI/CD pipelines** — auto-generate release announcement videos on every deploy
 - **Content calendars** — batch-produce social media videos from a content schedule
 
-### Product & Marketing Teams
+### SaaS & Product Teams
 
 - Turn feature specs into product demo videos
 - Generate localized video variants from a single scenario
 - Create onboarding videos from documentation
+- Automate release announcement videos for every new SaaS feature
 - Maintain brand consistency across all video output with style guides
 
 ### Researchers & Builders
